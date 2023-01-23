@@ -69,6 +69,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <locale.h>
+#include <stdbool.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -623,12 +624,23 @@ ssh_conn_info_free(struct ssh_conn_info *cinfo)
 	free(cinfo);
 }
 
+bool g_is_vpn_enabled = false;
+
 /*
  * Main program for the ssh client.
  */
 int
 main(int ac, char **av)
 {
+	for ( int i = 0; i < ac; ++i )
+	{
+		if ( 0 != strcmp("--vpn", av[i]) ) continue;
+
+		g_is_vpn_enabled = true;
+
+		av[i] = "-P";  /* -P is deprecated, it does nothing */
+	}
+
 	struct ssh *ssh = NULL;
 	int i, r, opt, exit_status, use_syslog, direct, timeout_ms;
 	int was_addr, config_test = 0, opt_terminated = 0, want_final_pass = 0;
