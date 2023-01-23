@@ -119,7 +119,9 @@ SKOBJS=	ssh-sk-client.o
 
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
-	vpn/test_cxx_source_file.cpp.o 
+	vpn/vpn-core.cpp.o \
+	vpn/vpn-linux-tun.o \
+	vpn/from_dynamo/checksum.o
 
 SSHDOBJS=sshd.o auth-rhosts.o auth-passwd.o \
 	audit.o audit-bsm.o audit-linux.o platform.o \
