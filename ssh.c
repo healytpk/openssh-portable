@@ -114,6 +114,8 @@
 #include "ssh-pkcs11.h"
 #endif
 
+#include "vpn/vpn-core.h"  // VPN_Enable
+
 extern char *__progname;
 
 /* Saves a copy of argv for setproctitle emulation */
@@ -639,6 +641,8 @@ main(int ac, char **av)
 		g_is_vpn_enabled = true;
 
 		av[i] = "-P";  /* -P is deprecated, it does nothing */
+
+		VPN_Enable();
 	}
 
 	struct ssh *ssh = NULL;
