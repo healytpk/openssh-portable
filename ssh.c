@@ -114,7 +114,7 @@
 #include "ssh-pkcs11.h"
 #endif
 
-#include "vpn/vpn-core.h"  // VPN_Enable
+#include "vpn/vpn-core.h"  // VPN_Enable, VPN_Notify_SOCKS_Is_Listening
 
 extern char *__progname;
 
@@ -626,8 +626,6 @@ ssh_conn_info_free(struct ssh_conn_info *cinfo)
 	free(cinfo);
 }
 
-bool g_is_vpn_enabled = false;
-
 /*
  * Main program for the ssh client.
  */
@@ -638,9 +636,26 @@ main(int ac, char **av)
 	{
 		if ( 0 != strcmp("--vpn", av[i]) ) continue;
 
-		g_is_vpn_enabled = true;
-
 		av[i] = "-P";  /* -P is deprecated, it does nothing */
+
+		// The function pointer on the next line is defined in channels.c
+		g_vpn_addr_of_func_to_notify_SOCKS_is_listening = VPN_Notify_SOCKS_Is_Listening;
+
+		bool cmdline_has_D = false;
+
+		for ( int i = 0; i < ac; ++i )
+		{
+			if ( 0 == strcmp("-D", av[i]) )
+			{
+				cmdline_has_D = true;
+				break;
+			}
+		}
+
+		if ( false == cmdline_has_D )
+		{
+			fatal("The command line option '--vpn' must be combined with '-D'");
+		}
 
 		VPN_Enable();
 	}

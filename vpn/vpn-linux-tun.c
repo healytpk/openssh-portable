@@ -3,6 +3,8 @@
 #include "Nonexistent_header_file_see_previous_error"
 #endif
 
+#include <stdio.h>           // sprintf
+#include <stdlib.h>          // system
 #include <string.h>          // strncpy, memset
 #include <sys/ioctl.h>       // ioctl
 #include <fcntl.h>           // open
@@ -16,42 +18,66 @@
 
 #define nullptr (0)
 
-static int setip(int const fd, char const *const str_dev, char const *const str_ip)
+int setip(int const fd, char const *const str_dev, char const *const str_ip)
 {
-    struct ifreq ifr = {0};
-    struct sockaddr_in addr = {0};
-    char buff[64u] = {0};
     int retval = -1;
 
-    strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
+    struct ifreq ifr = {0};
+    struct sockaddr_in addr = {0};
 
     addr.sin_family = AF_INET;
-    int const s = socket(addr.sin_family, SOCK_DGRAM, 0);
-    if ( -1 == s ) return -1;
+    //if ( 1 != inet_pton(addr.sin_family, str_ip, &addr.sin_addr) ) goto End;
 
-    if ( 1 != inet_pton(addr.sin_family, str_ip, &addr.sin_addr) ) goto End;
+#if 0
+    strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
+
+
+    int const s = socket(addr.sin_family, SOCK_DGRAM, 0);
+    if ( -1 == s ) goto End;
 
     ifr.ifr_addr = *(struct sockaddr*)&addr;
-
-    /* Next line is just to test if address conversion happened properly */
-    if ( nullptr == inet_ntop(AF_INET, &addr.sin_addr, buff, 64u) ) goto End;
-
-    if ( -1 == ioctl(s, SIOCSIFADDR, &ifr) ) goto End;
-
-    memset(&ifr, 0, sizeof ifr);
-    ifr.ifr_addr.sa_family = AF_INET;
-    strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
     ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr = htonl(0xFFFFFF00);
-    ioctl(s, SIOCSIFNETMASK, &ifr);
 
-    memset(&ifr, 0, sizeof ifr);
-    strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
-    ifr.ifr_flags |= IFF_UP;
+    if ( -1 == ioctl(s, SIOCSIFADDR   , &ifr) ) goto End;
+    if ( -1 == ioctl(s, SIOCSIFNETMASK, &ifr) ) goto End;
+
+    if ( -1 == ioctl(s, SIOCGIFFLAGS, &ifr) ) goto End;
+    ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
     if ( -1 == ioctl(s, SIOCSIFFLAGS, &ifr) ) goto End;
 
     //wipe_out_ipv6(fd,str_dev);
 
     retval = fd;
+
+
+#else
+
+    printf("================ MONKEY ==================");
+    int const s = -1;
+
+    retval = fd;
+
+    char buf[256u];
+
+    sleep(5);
+
+    //sprintf(buf,"ifconfig %s 10.10.10.1 netmask 255.255.255.0",str_dev);
+    //system(buf);
+    system("sudo ifconfig tun0 10.10.10.1 netmask 255.255.255.0");
+
+    sleep(5);
+
+    //sprintf(buf,"ifconfig %s up",str_dev);
+    //system(buf);
+    system("sudo ifconfig tun0 up");
+
+    system("route add -net `nslookup virjacode.com | grep Address | cut -d ' ' -f2 | tail -1` netmask 255.255.255.255 gw `route -n | grep \"^0\\.0\\.0\\.0\" | xargs | cut -d ' ' -f 2` metric 5 dev ens33");
+    system("route del -net 0.0.0.0 netmask 0.0.0.0 gw `route -n | grep \"^0\\.0\\.0\\.0\" | xargs | cut -d ' ' -f 2`");
+
+    //sprintf(buf,"route add -net 0.0.0.0 netmask 0.0.0.0 gw 10.10.10.2 metric 6 dev %s",str_dev);
+    //system(buf);
+    system("route add -net 0.0.0.0 netmask 0.0.0.0 gw 10.10.10.2 metric 6 dev tun0");
+#endif
 
 End:
     if ( -1 != s ) close(s);
@@ -73,11 +99,13 @@ int tun_alloc(void)
         return err;
     }
 
+/*
     if ( -1 == setip(fd, ifr.ifr_name, "10.10.10.1") )
     {
         close(fd);
         fd = -1;
     }
+*/
 
     return fd;
 }

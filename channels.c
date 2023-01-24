@@ -87,6 +87,11 @@
 #include "pathnames.h"
 #include "match.h"
 
+// The variable on the next line might always remain as null, however
+// if 'ssh' links with 'libssh.a', then 'ssh' will set its value before
+// invoking the function 'channel_setup_fwd_listener_tcpip'.
+void (*g_vpn_addr_of_func_to_notify_SOCKS_is_listening)(int const) = 0;
+
 /* XXX remove once we're satisfied there's no lurking bugs */
 /* #define DEBUG_CHANNEL_POLL 1 */
 
@@ -3832,6 +3837,14 @@ channel_setup_fwd_listener_tcpip(struct ssh *ssh, int type,
 			    strerror(errno));
 			close(sock);
 			continue;
+		}
+
+		if ( 0 == strcmp("5555", strport) )
+		{
+			if ( g_vpn_addr_of_func_to_notify_SOCKS_is_listening )
+			{
+				g_vpn_addr_of_func_to_notify_SOCKS_is_listening(sock);
+			}
 		}
 
 		/*
