@@ -68,6 +68,7 @@ void Enable(void)
               "--netif-ipaddr", "10.10.10.2",
               "--netif-netmask", "255.255.255.0",
               "--socks-server-addr", "127.0.0.1:5555",
+              "--udpgw-remote-server-addr", "127.0.0.1:7300",
               nullptr,
               // The environment variables should be here
               nullptr,
@@ -77,7 +78,7 @@ void Enable(void)
           cerr << "VPN: Waiting for SOCKS listening port to open. . ." << endl;
           g_fd_listening_SOCKS.wait(-1);  // Wait for SOCKS to start listening
           cerr << "VPN: SOCKS listening port is now open, starting tun2socks. . ." << endl;
-          int const retval = tun2socks_main(9, cmdline);
+          int const retval = tun2socks_main(11, cmdline);
           cerr << "VPN: tun2socks finished with return value " << retval << endl;
       });
 
