@@ -121,7 +121,8 @@ SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
 	vpn/vpn-core.cpp.o \
 	vpn/vpn-linux-tun.o \
-	vpn/from_dynamo/checksum.o
+	vpn/from_dynamo/checksum.o \
+	vpn_object_files/*.o
 
 SSHDOBJS=sshd.o auth-rhosts.o auth-passwd.o \
 	audit.o audit-bsm.o audit-linux.o platform.o \
