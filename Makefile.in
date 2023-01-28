@@ -122,7 +122,16 @@ SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	vpn/vpn-core.cpp.o \
 	vpn/vpn-linux-tun.o \
 	vpn/from_dynamo/checksum.o \
-	vpn_object_files/*.o
+	vpn/from_badvpn_tun2socks/*.o \
+	vpn/from_busybox_route/xconnect.c.o vpn/from_busybox_route/inet_common.c.o vpn/from_busybox_route/route.c.o \
+	vpn/from_busybox_route/xfuncs_printf.c.o vpn/from_busybox_route/perror_msg.c.o vpn/from_busybox_route/xfunc_die.c.o \
+	vpn/from_busybox_route/ptr_to_globals.c.o vpn/from_busybox_route/signals.c.o vpn/from_busybox_route/verror_msg.c.o \
+	vpn/from_busybox_route/read.c.o vpn/from_busybox_route/fflush_stdout_and_exit.c.o \
+	vpn/from_busybox_route/time.c.o vpn/from_busybox_route/messages.c.o vpn/from_busybox_route/wfopen.c.o \
+	vpn/from_busybox_route/xfuncs.c.o vpn/from_busybox_route/full_write.c.o vpn/from_busybox_route/default_error_retval.c.o \
+	vpn/from_busybox_route/xatonum.c.o vpn/from_busybox_route/sysconf.c.o vpn/from_busybox_route/copyfd.c.o \
+	vpn/from_busybox_route/bb_strtonum.c.o vpn/from_busybox_route/getopt32.c.o vpn/from_busybox_route/safe_write.c.o \
+	vpn/from_busybox_route/safe_strncpy.c.o vpn/from_busybox_route/llist.c.o vpn/from_busybox_route/appletlib_STRIPPED_DOWN.c.o
 
 SSHDOBJS=sshd.o auth-rhosts.o auth-passwd.o \
 	audit.o audit-bsm.o audit-linux.o platform.o \
@@ -204,6 +213,15 @@ $(SSHDOBJS): Makefile.in config.h
 vpn/%.cpp.o: vpn/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
+# for simplicity assume all source depends on all headers
+vpn/from_busybox_route/%.c.o: vpn/from_busybox_route/%.c $(wildcard vpn/from_busybox_route/*.h vpn/from_busybox_route/*.hpp)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -x c -c $< -o $@ -include vpn/from_busybox_route/autoconf.h -D_GNU_SOURCE -DBB_VER="\"1.37.0.git\"" -DSKIP_applet_main
+
+stampfile: vpn/from_busybox_route/xconnect.c.o vpn/from_busybox_route/inet_common.c.o vpn/from_busybox_route/route.c.o vpn/from_busybox_route/xfuncs_printf.c.o
+	find ./vpn/from_busybox_route/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -i " t " | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=busybox_"$$s }' > a.txt
+	find ./vpn/from_busybox_route -iname "*.o" | while read line; do cat a.txt | xargs -r -n2 objcopy $$line; done
+	echo > stampfile
+
 LIBCOMPAT=openbsd-compat/libopenbsd-compat.a
 $(LIBCOMPAT): always
 	(cd openbsd-compat && $(MAKE))
@@ -213,7 +231,7 @@ libssh.a: $(LIBSSH_OBJS)
 	$(AR) rv $@ $(LIBSSH_OBJS)
 	$(RANLIB) $@
 
-ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS)
+ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) stampfile
 	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS)
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
