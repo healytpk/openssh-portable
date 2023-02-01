@@ -29,6 +29,8 @@ inline void last_words_exit(char const *const p)
     exit(EXIT_FAILURE);
 }
 
+extern "C" int badvpn_main(int,char**);
+
 namespace VPN {
 
 std::atomic<int> g_fd_listening_SOCKS{-1};
@@ -39,14 +41,6 @@ static void ThreadEntryPoint_VPN_ListenToTun(std::stop_token st, int const tun_f
 
 void Enable(void)
 {
-    void *const h = ::dlopen("./libtun2socks.so", RTLD_NOW);
-
-    if ( nullptr == h ) last_words_exit("Could not load shared library libtun2socks.so");
-
-    int (*tun2socks_main)(int,char**) = reinterpret_cast<int (*)(int,char**)>(   dlsym(h,"main")   );
-
-    if ( nullptr == tun2socks_main ) last_words_exit("Could not get address of 'main' inside libtun2socks.so");
-
     int const tun_fd = tun_alloc();  /* tun interface */
 
     if ( tun_fd < 0 ) last_words_exit("Could not create and open tun device for VPN");
@@ -60,7 +54,7 @@ void Enable(void)
         setip(tun_fd,"tun0","10.10.10.1");
     });
 
-    g_thread_tun2socks = jthread([tun2socks_main](void)->void
+    g_thread_tun2socks = jthread([](void)->void
       {
           char *cmdline[] = {
               "badvpn-tun2socks",
@@ -78,7 +72,7 @@ void Enable(void)
           cerr << "VPN: Waiting for SOCKS listening port to open. . ." << endl;
           g_fd_listening_SOCKS.wait(-1);  // Wait for SOCKS to start listening
           cerr << "VPN: SOCKS listening port is now open, starting tun2socks. . ." << endl;
-          int const retval = tun2socks_main(11, cmdline);
+          int const retval = badvpn_main(11, cmdline);
           cerr << "VPN: tun2socks finished with return value " << retval << endl;
       });
 
