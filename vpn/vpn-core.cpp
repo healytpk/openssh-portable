@@ -35,6 +35,8 @@ extern "C" void busybox_bb_displayroutes(int noresolve, int netstatfmt) __attrib
 
 namespace VPN {
 
+extern "C" long unsigned g_ip_address_of_remote_SSH_server = 0u;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
+
 std::atomic<int> g_fd_listening_SOCKS{-1};
 
 jthread g_thread_tun2socks;
@@ -43,6 +45,19 @@ static void ThreadEntryPoint_VPN_ListenToTun(std::stop_token st, int const tun_f
 
 void Deal_With_Routing_Table(void)
 {
+    static_assert( 8u == CHAR_BIT, "Cannot handle 16-Bit char's or whatever size they are" );
+
+    char unsigned const *const p = static_cast<char unsigned const*>(static_cast<void const*>(&g_ip_address_of_remote_SSH_server));
+
+    // g_ip_address_of_remote_SSH_server is always in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines.
+    // Strangely though, on machines where 8 == sizeof(unsigned long), the 4 bytes we want are at the beginning rather
+    // than at the end, i.e. it's stored as [a][b][c][d][0][0][0][0] instead of [0][0][0][0][a][b][c][d]
+    cout << "Must create unique entry in routing table for "
+         << static_cast<unsigned>(p[0]) << "."
+         << static_cast<unsigned>(p[1]) << "."
+         << static_cast<unsigned>(p[2]) << "."
+         << static_cast<unsigned>(p[3]) << endl;
+
     cout << "Here's how your routing table currently looks:\n";
 
     char *cmdline[] = {

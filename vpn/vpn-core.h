@@ -9,6 +9,7 @@
 
         // The variable on the next line is defined in channels.c
         extern "C" void (*g_vpn_addr_of_func_to_notify_SOCKS_is_listening)(int fd);
+        extern "C" long unsigned g_ip_address_of_remote_SSH_server;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
     }
 
 #else
@@ -21,6 +22,7 @@
 
      // The variable on the next line is defined in channels.c
      extern void (*g_vpn_addr_of_func_to_notify_SOCKS_is_listening)(int fd);
+     extern long unsigned g_ip_address_of_remote_SSH_server;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
 
 #endif
 

@@ -632,18 +632,20 @@ ssh_conn_info_free(struct ssh_conn_info *cinfo)
 int
 main(int ac, char **av)
 {
-	for ( int i = 0; i < ac; ++i )
+	bool should_enable_vpn = false;
+
+	for ( int i = 1; i < ac; ++i )
 	{
 		if ( 0 != strcmp("--vpn", av[i]) ) continue;
 
-		av[i] = "-P";  /* -P is deprecated, it does nothing */
+		av[i] = "-P";  /* Replace with '-P' because it's deprecated, it does nothing */
 
 		// The function pointer on the next line is defined in channels.c
 		g_vpn_addr_of_func_to_notify_SOCKS_is_listening = VPN_Notify_SOCKS_Is_Listening;
 
 		bool cmdline_has_D = false;
 
-		for ( int i = 0; i < ac; ++i )
+		for ( int i = 1; i < ac; ++i )
 		{
 			if ( 0 == strcmp("-D", av[i]) )
 			{
@@ -657,7 +659,7 @@ main(int ac, char **av)
 			fatal("The command line option '--vpn' must be combined with '-D'");
 		}
 
-		VPN_Enable();
+		should_enable_vpn = true;
 	}
 
 	struct ssh *ssh = NULL;
@@ -1587,6 +1589,21 @@ main(int ac, char **av)
 		timeout_ms = INT_MAX;
 	else
 		timeout_ms = options.connection_timeout * 1000;
+
+	if ( should_enable_vpn )
+	{
+		struct sockaddr    const *const p1 = addrs->ai_addr;
+		struct sockaddr_in const *const p2 = (struct sockaddr_in const *)p1;
+		g_ip_address_of_remote_SSH_server = p2->sin_addr.s_addr; // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
+		if ( (0ul==g_ip_address_of_remote_SSH_server) || (-1==g_ip_address_of_remote_SSH_server) || (0xFFFFFFFFul==g_ip_address_of_remote_SSH_server) )
+		{
+			puts("Cannot enable VPN -- unable to determine IPv4 address of remote SSH server");
+			exit(255);
+		}
+		char str[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &p2->sin_addr, str, INET_ADDRSTRLEN);
+		VPN_Enable();
+	}
 
 	/* Open a connection to the remote host. */
 	if (ssh_connect(ssh, host, options.host_arg, addrs, &hostaddr,
