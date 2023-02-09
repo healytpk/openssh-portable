@@ -18,7 +18,7 @@
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio.hpp>
 
-using std::cerr; using std::endl; using std::move; using std::jthread;
+using std::cout; using std::cerr; using std::endl; using std::move; using std::jthread;
 
 extern "C" int tun_alloc(void);  // defined in vpn/vpn-linux-tun.c
 extern "C" int setip(int const fd, char const *const str_dev, char const *const str_ip);
@@ -30,6 +30,8 @@ inline void last_words_exit(char const *const p)
 }
 
 extern "C" int badvpn_main(int,char**);
+//extern "C" int busybox_route_main(int,char**);
+extern "C" void busybox_bb_displayroutes(int noresolve, int netstatfmt) __attribute__((regparm(3),stdcall));
 
 namespace VPN {
 
@@ -39,8 +41,30 @@ jthread g_thread_tun2socks;
 
 static void ThreadEntryPoint_VPN_ListenToTun(std::stop_token st, int const tun_fd);
 
+void Deal_With_Routing_Table(void)
+{
+    cout << "Here's how your routing table currently looks:\n";
+
+    char *cmdline[] = {
+        "route",
+        "-n",
+        nullptr,
+        // The environment variables should be here
+        nullptr,
+        nullptr,
+    };
+
+    busybox_bb_displayroutes(0x0fffu, 0);
+
+    cout << "Do you wish to use 10.10.10.0/24 for the VPN?\n";
+    int i;
+    std::cin >> i;
+}
+
 void Enable(void)
 {
+    Deal_With_Routing_Table();
+
     int const tun_fd = tun_alloc();  /* tun interface */
 
     if ( tun_fd < 0 ) last_words_exit("Could not create and open tun device for VPN");
