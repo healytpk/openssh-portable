@@ -20,7 +20,10 @@
 
 using std::cout; using std::cerr; using std::endl; using std::move; using std::jthread;
 
-extern "C" int tun_alloc(void);  // defined in vpn/vpn-linux-tun.c
+// The next three are defined in vpn/vpn-linux-tun.c
+extern "C" int g_fd_tun;
+extern "C" char g_str_tun_ifnam[IFNAMSIZ];
+extern "C" void tun_alloc(void);
 extern "C" int setip(int const fd, char const *const str_dev, char const *const str_ip);
 
 inline void last_words_exit(char const *const p)
@@ -40,8 +43,6 @@ extern "C" long unsigned g_ip_address_of_remote_SSH_server = 0u;  // Stored in N
 std::atomic<int> g_fd_listening_SOCKS{-1};
 
 jthread g_thread_tun2socks;
-
-static void ThreadEntryPoint_VPN_ListenToTun(std::stop_token st, int const tun_fd);
 
 static void Deal_With_Routing_Table(void)
 {
@@ -76,17 +77,15 @@ static void Deal_With_Routing_Table(void)
     //std::cin >> i;
 }
 
-int tun_fd = -1;
-
 void Enable(void)
 {
     Deal_With_Routing_Table();
 
     cerr << "Creating TUN device. . .\n";
 
-    tun_fd = tun_alloc();  /* tun interface */
+    tun_alloc();
 
-    if ( tun_fd < 0 ) last_words_exit("Could not create and open tun device for VPN");
+    if ( g_fd_tun < 0 ) last_words_exit("Could not create and open tun device for VPN");
 
     cerr << "TUN device successfully created.\n";
 }
@@ -96,12 +95,12 @@ static void Start(std::stop_token)
     cerr << "=============== Spawn new thread : VPN Thread ===============\n";
 
     cerr << "VPN Thread: Setting IP address of TUN device. . .\n";
-    setip(tun_fd,"tun0","10.10.10.1");
+    setip(g_fd_tun,"tun0","10.10.10.1");
     cerr << "VPN Thread: IP address of TUN device is now set.\n";
 
     char *cmdline[] = {
         "badvpn-tun2socks",
-        "--tundev", "tun0",
+        "--tundev", g_str_tun_ifnam,
         "--netif-ipaddr", "10.10.10.2",
         "--netif-netmask", "255.255.255.0",
         "--socks-server-addr", "127.0.0.1:5555",
@@ -112,9 +111,9 @@ static void Start(std::stop_token)
         nullptr,
     };
 
-    dup2(fileno(stderr),fileno(stdout));
+    dup2(fileno(stderr),fileno(stdout));  // cout becomes cerr
     busybox_bb_displayroutes(0x0fffu, 0);
-    cerr << "VPN: Waiting 5 seconds and then entering 'main' of tun2socks. . . ";
+    cerr << "VPN: Waiting 5 seconds and then entering 'main' of tun2socks. . .";
     cerr << "5 ... "; sleep(1); cerr << "4 ... "; sleep(1); cerr << "3 ... "; sleep(1); cerr << "2 ... "; sleep(1); cerr << "1 ..."; sleep(1); cerr << endl;
     busybox_bb_displayroutes(0x0fffu, 0);
     int const retval = badvpn_main(11, cmdline);
