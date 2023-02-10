@@ -52,20 +52,19 @@ int setip(int const fd, char const *const str_dev, char const *const str_ip)
 
 #else
 
-    printf("================ MONKEY ==================");
     int const s = -1;
 
     retval = fd;
 
     char buf[256u];
 
-    sleep(5);
+    //sleep(5);
 
     //sprintf(buf,"ifconfig %s 10.10.10.1 netmask 255.255.255.0",str_dev);
     //system(buf);
     system("sudo ifconfig tun0 10.10.10.1 netmask 255.255.255.0");
 
-    sleep(5);
+    //sleep(5);
 
     //sprintf(buf,"ifconfig %s up",str_dev);
     //system(buf);

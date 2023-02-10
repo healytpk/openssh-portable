@@ -43,7 +43,7 @@ jthread g_thread_tun2socks;
 
 static void ThreadEntryPoint_VPN_ListenToTun(std::stop_token st, int const tun_fd);
 
-void Deal_With_Routing_Table(void)
+static void Deal_With_Routing_Table(void)
 {
     static_assert( 8u == CHAR_BIT, "Cannot handle 16-Bit char's or whatever size they are" );
 
@@ -73,49 +73,53 @@ void Deal_With_Routing_Table(void)
 
     cout << "Do you wish to use 10.10.10.0/24 for the VPN?\n";
     int i;
-    std::cin >> i;
+    //std::cin >> i;
 }
+
+int tun_fd = -1;
 
 void Enable(void)
 {
     Deal_With_Routing_Table();
 
-    int const tun_fd = tun_alloc();  /* tun interface */
+    cerr << "Creating TUN device. . .\n";
+
+    tun_fd = tun_alloc();  /* tun interface */
 
     if ( tun_fd < 0 ) last_words_exit("Could not create and open tun device for VPN");
 
-    // And now start separate thread for tun2socks
+    cerr << "TUN device successfully created.\n";
+}
 
-    static jthread dummy([tun_fd](){
-        printf(" - - - dummy thread sleeping for 5 secs. . . - - -\n");
-        sleep(3);
-        printf(" - - - dummy thread setting IP address and bringing up - - -\n");
-        setip(tun_fd,"tun0","10.10.10.1");
-    });
+static void Start(std::stop_token)
+{
+    cerr << "=============== Spawn new thread : VPN Thread ===============\n";
 
-    g_thread_tun2socks = jthread([](void)->void
-      {
-          char *cmdline[] = {
-              "badvpn-tun2socks",
-              "--tundev", "tun0",
-              "--netif-ipaddr", "10.10.10.2",
-              "--netif-netmask", "255.255.255.0",
-              "--socks-server-addr", "127.0.0.1:5555",
-              "--udpgw-remote-server-addr", "127.0.0.1:7300",
-              nullptr,
-              // The environment variables should be here
-              nullptr,
-              nullptr,
-          };
+    cerr << "VPN Thread: Setting IP address of TUN device. . .\n";
+    setip(tun_fd,"tun0","10.10.10.1");
+    cerr << "VPN Thread: IP address of TUN device is now set.\n";
 
-          cerr << "VPN: Waiting for SOCKS listening port to open. . ." << endl;
-          g_fd_listening_SOCKS.wait(-1);  // Wait for SOCKS to start listening
-          cerr << "VPN: SOCKS listening port is now open, starting tun2socks. . ." << endl;
-          int const retval = badvpn_main(11, cmdline);
-          cerr << "VPN: tun2socks finished with return value " << retval << endl;
-      });
+    char *cmdline[] = {
+        "badvpn-tun2socks",
+        "--tundev", "tun0",
+        "--netif-ipaddr", "10.10.10.2",
+        "--netif-netmask", "255.255.255.0",
+        "--socks-server-addr", "127.0.0.1:5555",
+        "--udpgw-remote-server-addr", "127.0.0.1:7300",
+        nullptr,
+        // The environment variables should be here
+        nullptr,
+        nullptr,
+    };
 
-    //g_thread_vpn_tun.join();
+    dup2(fileno(stderr),fileno(stdout));
+    busybox_bb_displayroutes(0x0fffu, 0);
+    cerr << "VPN: Waiting 5 seconds and then entering 'main' of tun2socks. . . ";
+    cerr << "5 ... "; sleep(1); cerr << "4 ... "; sleep(1); cerr << "3 ... "; sleep(1); cerr << "2 ... "; sleep(1); cerr << "1 ..."; sleep(1); cerr << endl;
+    busybox_bb_displayroutes(0x0fffu, 0);
+    int const retval = badvpn_main(11, cmdline);
+    cerr << "VPN: 'main' of tun2socks has returned with value " << retval << endl;
+    cerr << "=============== Thread finished : VPN Thread ===============\n";
 }
 
 bool ParseNetworks(int const a, int const b)
@@ -141,4 +145,6 @@ extern "C" void VPN_Notify_SOCKS_Is_Listening(int const fd)
 {
     VPN::g_fd_listening_SOCKS = fd;
     VPN::g_fd_listening_SOCKS.notify_all();
+
+    static std::jthread mythread(VPN::Start);
 }
