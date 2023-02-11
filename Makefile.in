@@ -42,9 +42,9 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_SSH_PIDDIR=\"$(piddir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
-CC=@CC@
-CXX=g++ -std=c++23
-LD=@LD@
+CC=@CC@ -ggdb3
+CXX=g++ -std=c++23 -ggdb3
+LD=@LD@ -ggdb3
 CFLAGS=@CFLAGS@
 CXXFLAGS=$(CFLAGS)
 CFLAGS_NOPIE=@CFLAGS_NOPIE@
