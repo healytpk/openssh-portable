@@ -24,63 +24,33 @@
 int g_fd_tun = -1;
 char g_str_tun_ifnam[IFNAMSIZ] = {0};
 
-struct Dynamic_Function_Pointers {
-	int (*open )(const char *, int, ...);
-	int (*ioctl)(int, unsigned long, ...);
-};
-
-static struct Dynamic_Function_Pointers g_real_funcs = { nullptr };  /* All function pointers start off as null */
-
-void Set_Function_Pointers(void)
-{
-    static bool already_done = false;
-
-    if ( already_done ) return;
-
-    already_done = true;
-
-    g_real_funcs.open  = dlsym(RTLD_NEXT, "open" );
-    g_real_funcs.ioctl = dlsym(RTLD_NEXT, "ioctl");
-
-    for ( unsigned i = 0u; i != (sizeof g_real_funcs / sizeof(void(*)(void))); ++i )
-    {
-        if ( nullptr == ((void(**)(void))&g_real_funcs)[i] ) abort();
-    }
-}
-
-int open(char const *const pathname, int const flags, ...)
+int open_FOR_badvpn(char const *const pathname, int const flags, ...)
 {
     if ( 0 == strcmp(pathname,"/dev/net/tun") ) return g_fd_tun;
 
-    Set_Function_Pointers();
-
-    void *const ret = __builtin_apply(g_real_funcs.open, __builtin_apply_args(), 1000);
+    void *const ret = __builtin_apply(open, __builtin_apply_args(), 1000);
 
     __builtin_return(ret);
 }
 
-int ioctl(int fd, unsigned long request, ...)
+int ioctl_FOR_badvpn(int const fd, unsigned long const request, ...)
 {
     if ( TUNSETIFF == request ) return 1;
 
-    Set_Function_Pointers();
-
-    void *const ret = __builtin_apply(g_real_funcs.ioctl, __builtin_apply_args(), 1000);
+    void *const ret = __builtin_apply(ioctl, __builtin_apply_args(), 1000);
 
     __builtin_return(ret);
 }
 
 void tun_alloc(void)
 {
-    Set_Function_Pointers();
-
-    if ( (g_fd_tun = g_real_funcs.open("/dev/net/tun", O_RDWR)) < 0 ) return;
+    if ( (g_fd_tun = open("/dev/net/tun", O_RDWR)) < 0 ) return;
 
     struct ifreq ifr = {0};
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
     int err;
 
-    if ( (err = g_real_funcs.ioctl(g_fd_tun, TUNSETIFF, &ifr)) < 0 )
+    if ( (err = ioctl(g_fd_tun, TUNSETIFF, &ifr)) < 0 )
     {
         close(g_fd_tun);
         g_fd_tun = err;

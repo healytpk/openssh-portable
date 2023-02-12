@@ -121,17 +121,42 @@ SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
 	vpn/vpn-core.cpp.o \
 	vpn/vpn-linux-tun.o \
-	vpn/from_dynamo/checksum.o \
-	vpn/from_busybox_route/xconnect.c.o vpn/from_busybox_route/inet_common.c.o vpn/from_busybox_route/route.c.o \
-	vpn/from_busybox_route/xfuncs_printf.c.o vpn/from_busybox_route/perror_msg.c.o vpn/from_busybox_route/xfunc_die.c.o \
-	vpn/from_busybox_route/ptr_to_globals.c.o vpn/from_busybox_route/signals.c.o vpn/from_busybox_route/verror_msg.c.o \
-	vpn/from_busybox_route/read.c.o vpn/from_busybox_route/fflush_stdout_and_exit.c.o \
-	vpn/from_busybox_route/time.c.o vpn/from_busybox_route/messages.c.o vpn/from_busybox_route/wfopen.c.o \
-	vpn/from_busybox_route/xfuncs.c.o vpn/from_busybox_route/full_write.c.o vpn/from_busybox_route/default_error_retval.c.o \
-	vpn/from_busybox_route/xatonum.c.o vpn/from_busybox_route/sysconf.c.o vpn/from_busybox_route/copyfd.c.o \
-	vpn/from_busybox_route/bb_strtonum.c.o vpn/from_busybox_route/getopt32.c.o vpn/from_busybox_route/safe_write.c.o \
-	vpn/from_busybox_route/safe_strncpy.c.o vpn/from_busybox_route/llist.c.o vpn/from_busybox_route/appletlib_STRIPPED_DOWN.c.o \
-	vpn/from_badvpn_tun2socks/BConnection_common.c.o vpn/from_badvpn_tun2socks/init.c.o vpn/from_badvpn_tun2socks/PacketProtoEncoder.c.o vpn/from_badvpn_tun2socks/BConnection_unix.c.o vpn/from_badvpn_tun2socks/BDatagram_unix.c.o vpn/from_badvpn_tun2socks/BLog.c.o vpn/from_badvpn_tun2socks/BLog_syslog.c.o vpn/from_badvpn_tun2socks/BNetwork.c.o vpn/from_badvpn_tun2socks/BPending.c.o vpn/from_badvpn_tun2socks/BReactor_badvpn.c.o vpn/from_badvpn_tun2socks/BSignal.c.o vpn/from_badvpn_tun2socks/BSocksClient.c.o vpn/from_badvpn_tun2socks/BTap.c.o vpn/from_badvpn_tun2socks/BTime.c.o vpn/from_badvpn_tun2socks/BufferWriter.c.o vpn/from_badvpn_tun2socks/BUnixSignal.c.o vpn/from_badvpn_tun2socks/DebugObject.c.o vpn/from_badvpn_tun2socks/def.c.o vpn/from_badvpn_tun2socks/icmp6.c.o vpn/from_badvpn_tun2socks/icmp.c.o vpn/from_badvpn_tun2socks/inet_chksum.c.o vpn/from_badvpn_tun2socks/ip4_addr.c.o vpn/from_badvpn_tun2socks/ip4.c.o vpn/from_badvpn_tun2socks/ip4_frag.c.o vpn/from_badvpn_tun2socks/ip6_addr.c.o vpn/from_badvpn_tun2socks/ip6.c.o vpn/from_badvpn_tun2socks/ip6_frag.c.o vpn/from_badvpn_tun2socks/ip.c.o vpn/from_badvpn_tun2socks/mem.c.o vpn/from_badvpn_tun2socks/memp.c.o vpn/from_badvpn_tun2socks/nd6.c.o vpn/from_badvpn_tun2socks/netif.c.o vpn/from_badvpn_tun2socks/PacketBuffer.c.o vpn/from_badvpn_tun2socks/PacketPassConnector.c.o vpn/from_badvpn_tun2socks/PacketPassFairQueue.c.o vpn/from_badvpn_tun2socks/PacketPassInactivityMonitor.c.o vpn/from_badvpn_tun2socks/PacketPassInterface.c.o vpn/from_badvpn_tun2socks/PacketProtoDecoder.c.o vpn/from_badvpn_tun2socks/PacketProtoFlow.c.o vpn/from_badvpn_tun2socks/PacketRecvInterface.c.o vpn/from_badvpn_tun2socks/PacketStreamSender.c.o vpn/from_badvpn_tun2socks/pbuf.c.o vpn/from_badvpn_tun2socks/SinglePacketBuffer.c.o vpn/from_badvpn_tun2socks/SocksUdpClient.c.o vpn/from_badvpn_tun2socks/SocksUdpGwClient.c.o vpn/from_badvpn_tun2socks/stats.c.o vpn/from_badvpn_tun2socks/StreamPassInterface.c.o vpn/from_badvpn_tun2socks/StreamRecvInterface.c.o vpn/from_badvpn_tun2socks/tcp.c.o vpn/from_badvpn_tun2socks/tcp_in.c.o vpn/from_badvpn_tun2socks/tcp_out.c.o vpn/from_badvpn_tun2socks/timeouts.c.o vpn/from_badvpn_tun2socks/tun2socks.c.o vpn/from_badvpn_tun2socks/UdpGwClient.c.o
+	vpn/from_dynamo/checksum.o
+
+SOURCE_FILES_BUSYBOX = vpn/from_busybox_route/xconnect.c vpn/from_busybox_route/inet_common.c vpn/from_busybox_route/route.c \
+  vpn/from_busybox_route/xfuncs_printf.c vpn/from_busybox_route/perror_msg.c vpn/from_busybox_route/xfunc_die.c \
+  vpn/from_busybox_route/ptr_to_globals.c vpn/from_busybox_route/signals.c vpn/from_busybox_route/verror_msg.c \
+  vpn/from_busybox_route/read.c vpn/from_busybox_route/fflush_stdout_and_exit.c \
+  vpn/from_busybox_route/time.c vpn/from_busybox_route/messages.c vpn/from_busybox_route/wfopen.c \
+  vpn/from_busybox_route/xfuncs.c vpn/from_busybox_route/full_write.c vpn/from_busybox_route/default_error_retval.c \
+  vpn/from_busybox_route/xatonum.c vpn/from_busybox_route/sysconf.c vpn/from_busybox_route/copyfd.c \
+  vpn/from_busybox_route/bb_strtonum.c vpn/from_busybox_route/getopt32.c vpn/from_busybox_route/safe_write.c \
+  vpn/from_busybox_route/safe_strncpy.c vpn/from_busybox_route/llist.c vpn/from_busybox_route/appletlib_STRIPPED_DOWN.c
+
+OBJ_FILES_BUSYBOX = $(addsuffix .o,$(SOURCE_FILES_BUSYBOX))
+
+SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
+  vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
+  vpn/from_badvpn_tun2socks/BDatagram_unix.c vpn/from_badvpn_tun2socks/BLog.c vpn/from_badvpn_tun2socks/BLog_syslog.c \
+  vpn/from_badvpn_tun2socks/BNetwork.c vpn/from_badvpn_tun2socks/BPending.c vpn/from_badvpn_tun2socks/BReactor_badvpn.c \
+  vpn/from_badvpn_tun2socks/BSignal.c vpn/from_badvpn_tun2socks/BSocksClient.c vpn/from_badvpn_tun2socks/BTap.c \
+  vpn/from_badvpn_tun2socks/BTime.c vpn/from_badvpn_tun2socks/BufferWriter.c vpn/from_badvpn_tun2socks/BUnixSignal.c \
+  vpn/from_badvpn_tun2socks/DebugObject.c vpn/from_badvpn_tun2socks/def.c vpn/from_badvpn_tun2socks/icmp6.c \
+  vpn/from_badvpn_tun2socks/icmp.c vpn/from_badvpn_tun2socks/inet_chksum.c vpn/from_badvpn_tun2socks/ip4_addr.c \
+  vpn/from_badvpn_tun2socks/ip4.c vpn/from_badvpn_tun2socks/ip4_frag.c vpn/from_badvpn_tun2socks/ip6_addr.c \
+  vpn/from_badvpn_tun2socks/ip6.c vpn/from_badvpn_tun2socks/ip6_frag.c vpn/from_badvpn_tun2socks/ip.c \
+  vpn/from_badvpn_tun2socks/mem.c vpn/from_badvpn_tun2socks/memp.c vpn/from_badvpn_tun2socks/nd6.c \
+  vpn/from_badvpn_tun2socks/netif.c vpn/from_badvpn_tun2socks/PacketBuffer.c vpn/from_badvpn_tun2socks/PacketPassConnector.c \
+  vpn/from_badvpn_tun2socks/PacketPassFairQueue.c vpn/from_badvpn_tun2socks/PacketPassInactivityMonitor.c \
+  vpn/from_badvpn_tun2socks/PacketPassInterface.c vpn/from_badvpn_tun2socks/PacketProtoDecoder.c \
+  vpn/from_badvpn_tun2socks/PacketProtoFlow.c vpn/from_badvpn_tun2socks/PacketRecvInterface.c \
+  vpn/from_badvpn_tun2socks/PacketStreamSender.c vpn/from_badvpn_tun2socks/pbuf.c vpn/from_badvpn_tun2socks/SinglePacketBuffer.c \
+  vpn/from_badvpn_tun2socks/SocksUdpClient.c vpn/from_badvpn_tun2socks/SocksUdpGwClient.c vpn/from_badvpn_tun2socks/stats.c \
+  vpn/from_badvpn_tun2socks/StreamPassInterface.c vpn/from_badvpn_tun2socks/StreamRecvInterface.c vpn/from_badvpn_tun2socks/tcp.c \
+  vpn/from_badvpn_tun2socks/tcp_in.c vpn/from_badvpn_tun2socks/tcp_out.c vpn/from_badvpn_tun2socks/timeouts.c \
+  vpn/from_badvpn_tun2socks/tun2socks.c vpn/from_badvpn_tun2socks/UdpGwClient.c
+
+OBJ_FILES_BADVPN = $(addsuffix .o,$(SOURCE_FILES_BADVPN))
 
 SSHDOBJS=sshd.o auth-rhosts.o auth-passwd.o \
 	audit.o audit-bsm.o audit-linux.o platform.o \
@@ -214,22 +239,30 @@ vpn/%.cpp.o: vpn/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # for simplicity assume all source depends on all headers
-vpn/from_busybox_route/%.c.o: vpn/from_busybox_route/%.c $(wildcard vpn/from_busybox_route/*.h vpn/from_busybox_route/*.hpp)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@ -include vpn/from_busybox_route/autoconf.h -D_GNU_SOURCE -DBB_VER="\"1.37.0.git\"" -DSKIP_applet_main
+stampfile_busybox: $(SOURCE_FILES_BUSYBOX) $(wildcard vpn/from_busybox_route/*.h vpn/from_busybox_route/*.hpp)
+	rm -rf ./vpn/from_busybox_route/*.o
+	echo $(SOURCE_FILES_BUSYBOX) | tr ' ' '\n' | while read line; do \
+	    $(CC) $(CFLAGS) $(CPPFLAGS) -c $${line} -o $${line}.o -include vpn/from_busybox_route/autoconf.h -D_GNU_SOURCE -DBB_VER="\"1.37.0.git\"" -DSKIP_applet_main; done
+	find ./vpn/from_busybox_route/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=busybox_"$$s }' > symbol_redefinitions_busybox.txt
+	find ./vpn/from_busybox_route/ -iname "*.o" | while read line; do cat symbol_redefinitions_busybox.txt | xargs -r -n2 objcopy $$line; done
+	echo > stampfile_busybox
 
 # for simplicity assume all source depends on all headers
-vpn/from_badvpn_tun2socks/%.c.o: vpn/from_badvpn_tun2socks/%.c $(wildcard vpn/from_badvpn_tun2socks/*.h vpn/from_badvpn_tun2socks/*.hpp)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@ -Ivpn/from_badvpn_tun2socks/ -DBADVPN_BREACTOR_BADVPN -DBADVPN_LINUX -DBADVPN_LITTLE_ENDIAN -DBADVPN_THREADWORK_USE_PTHREAD -DBADVPN_THREAD_SAFE=1 -DBADVPN_USE_EPOLL -DBADVPN_USE_INOTIFY -DBADVPN_USE_LINUX_INPUT -DBADVPN_USE_LINUX_RFKILL -DBADVPN_USE_SIGNALFD -DBADVPN_USE_SYSLOG
+stampfile_badvpn: $(SOURCE_FILES_BADVPN) $(wildcard vpn/from_badvpn_tun2socks/*.h vpn/from_badvpn_tun2socks/*.hpp)
+	rm -rf ./vpn/from_badvpn_tun2socks/*.o
+	echo $(SOURCE_FILES_BADVPN) | tr ' ' '\n' | while read line; do \
+	    $(CC) $(CFLAGS) $(CPPFLAGS) -c $${line} -o $${line}.o -Ivpn/from_badvpn_tun2socks/ -DBADVPN_BREACTOR_BADVPN -DBADVPN_LINUX -DBADVPN_LITTLE_ENDIAN -DBADVPN_THREADWORK_USE_PTHREAD -DBADVPN_THREAD_SAFE=1 -DBADVPN_USE_EPOLL -DBADVPN_USE_INOTIFY -DBADVPN_USE_LINUX_INPUT -DBADVPN_USE_LINUX_RFKILL -DBADVPN_USE_SIGNALFD -DBADVPN_USE_SYSLOG; done
+	find ./vpn/from_badvpn_tun2socks/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=badvpn_"$$s }' > symbol_redefinitions_badvpn.txt
+	echo "--redefine-sym open=open_FOR_badvpn" >> symbol_redefinitions_badvpn.txt
+	echo "--redefine-sym ioctl=ioctl_FOR_badvpn" >> symbol_redefinitions_badvpn.txt
+	find ./vpn/from_badvpn_tun2socks/ -iname "*.o" | while read line; do cat symbol_redefinitions_badvpn.txt | xargs -r -n2 objcopy $$line; done
+	echo > stampfile_badvpn
 
-stampfile1: vpn/from_busybox_route/xconnect.c.o vpn/from_busybox_route/inet_common.c.o vpn/from_busybox_route/route.c.o vpn/from_busybox_route/xfuncs_printf.c.o
-	find ./vpn/from_busybox_route/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=busybox_"$$s }' > a1.txt
-	find ./vpn/from_busybox_route -iname "*.o" | while read line; do cat a1.txt | xargs -r -n2 objcopy $$line; done
-	echo > stampfile1
+vpn/from_busybox_route/%.c.o: stampfile_busybox
+	@echo -n " "
 
-stampfile2: vpn/from_badvpn_tun2socks/BConnection_common.c.o vpn/from_badvpn_tun2socks/init.c.o vpn/from_badvpn_tun2socks/PacketProtoEncoder.c.o vpn/from_badvpn_tun2socks/BConnection_unix.c.o vpn/from_badvpn_tun2socks/BDatagram_unix.c.o vpn/from_badvpn_tun2socks/BLog.c.o vpn/from_badvpn_tun2socks/BLog_syslog.c.o vpn/from_badvpn_tun2socks/BNetwork.c.o vpn/from_badvpn_tun2socks/BPending.c.o vpn/from_badvpn_tun2socks/BReactor_badvpn.c.o vpn/from_badvpn_tun2socks/BSignal.c.o vpn/from_badvpn_tun2socks/BSocksClient.c.o vpn/from_badvpn_tun2socks/BTap.c.o vpn/from_badvpn_tun2socks/BTime.c.o vpn/from_badvpn_tun2socks/BufferWriter.c.o vpn/from_badvpn_tun2socks/BUnixSignal.c.o vpn/from_badvpn_tun2socks/DebugObject.c.o vpn/from_badvpn_tun2socks/def.c.o vpn/from_badvpn_tun2socks/icmp6.c.o vpn/from_badvpn_tun2socks/icmp.c.o vpn/from_badvpn_tun2socks/inet_chksum.c.o vpn/from_badvpn_tun2socks/ip4_addr.c.o vpn/from_badvpn_tun2socks/ip4.c.o vpn/from_badvpn_tun2socks/ip4_frag.c.o vpn/from_badvpn_tun2socks/ip6_addr.c.o vpn/from_badvpn_tun2socks/ip6.c.o vpn/from_badvpn_tun2socks/ip6_frag.c.o vpn/from_badvpn_tun2socks/ip.c.o vpn/from_badvpn_tun2socks/mem.c.o vpn/from_badvpn_tun2socks/memp.c.o vpn/from_badvpn_tun2socks/nd6.c.o vpn/from_badvpn_tun2socks/netif.c.o vpn/from_badvpn_tun2socks/PacketBuffer.c.o vpn/from_badvpn_tun2socks/PacketPassConnector.c.o vpn/from_badvpn_tun2socks/PacketPassFairQueue.c.o vpn/from_badvpn_tun2socks/PacketPassInactivityMonitor.c.o vpn/from_badvpn_tun2socks/PacketPassInterface.c.o vpn/from_badvpn_tun2socks/PacketProtoDecoder.c.o vpn/from_badvpn_tun2socks/PacketProtoFlow.c.o vpn/from_badvpn_tun2socks/PacketRecvInterface.c.o vpn/from_badvpn_tun2socks/PacketStreamSender.c.o vpn/from_badvpn_tun2socks/pbuf.c.o vpn/from_badvpn_tun2socks/SinglePacketBuffer.c.o vpn/from_badvpn_tun2socks/SocksUdpClient.c.o vpn/from_badvpn_tun2socks/SocksUdpGwClient.c.o vpn/from_badvpn_tun2socks/stats.c.o vpn/from_badvpn_tun2socks/StreamPassInterface.c.o vpn/from_badvpn_tun2socks/StreamRecvInterface.c.o vpn/from_badvpn_tun2socks/tcp.c.o vpn/from_badvpn_tun2socks/tcp_in.c.o vpn/from_badvpn_tun2socks/tcp_out.c.o vpn/from_badvpn_tun2socks/timeouts.c.o vpn/from_badvpn_tun2socks/tun2socks.c.o vpn/from_badvpn_tun2socks/UdpGwClient.c.o
-	find ./vpn/from_badvpn_tun2socks/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=badvpn_"$$s }' > a2.txt
-	find ./vpn/from_badvpn_tun2socks -iname "*.o" | while read line; do cat a2.txt | xargs -r -n2 objcopy $$line; done
-	echo > stampfile2
+vpn/from_badvpn_tun2socks/%.c.o: stampfile_badvpn
+	@echo -n " "
 
 LIBCOMPAT=openbsd-compat/libopenbsd-compat.a
 $(LIBCOMPAT): always
@@ -240,8 +273,8 @@ libssh.a: $(LIBSSH_OBJS)
 	$(AR) rv $@ $(LIBSSH_OBJS)
 	$(RANLIB) $@
 
-ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) stampfile1 stampfile2
-	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS)
+ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BUSYBOX) $(OBJ_FILES_BADVPN)
+	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BUSYBOX) $(OBJ_FILES_BADVPN)
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)
@@ -303,6 +336,9 @@ moduli:
 
 clean:	regressclean
 	rm -f *.o *.lo *.a $(TARGETS) logintest config.cache config.log
+	rm -f ./vpn/from_busybox_route/*.o
+	rm -f ./vpn/from_badvpn_tun2socks/*.o
+	rm -f stampfile_*
 	rm -f *.out core survey
 	rm -f regress/check-perm$(EXEEXT)
 	rm -f regress/mkdtemp$(EXEEXT)
