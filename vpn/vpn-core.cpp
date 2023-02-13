@@ -89,6 +89,8 @@ void Enable(void)
 
     busybox_bb_errno = &dummy_for_bb_errno;
 
+    dup2(fileno(stderr),fileno(stdout));  // cout becomes cerr
+
     Deal_With_Routing_Table();
 
     cerr << "Creating TUN device. . .\n";
@@ -110,12 +112,17 @@ static void Start(std::stop_token)
     setip(g_fd_tun,g_str_tun_ifnam,"10.10.10.1");
     cerr << "VPN Thread: IP address of TUN device is now set.\n";
 
+    assert( 0u != g_local_ephemeral_port_for_SOCKS );
+
+    string str_socks_server_addr{"127.0.0.1:"};
+    str_socks_server_addr += std::to_string(g_local_ephemeral_port_for_SOCKS);
+
     char *cmdline[] = {
         "badvpn-tun2socks",
         "--tundev", g_str_tun_ifnam,
         "--netif-ipaddr", "10.10.10.2",
         "--netif-netmask", "255.255.255.0",
-        "--socks-server-addr", "127.0.0.1:5555",
+        "--socks-server-addr", const_cast<char*>(str_socks_server_addr.c_str()),
         "--udpgw-remote-server-addr", "127.0.0.1:7300",
         nullptr,
         // The environment variables should be here
@@ -123,7 +130,8 @@ static void Start(std::stop_token)
         nullptr,
     };
 
-    dup2(fileno(stderr),fileno(stdout));  // cout becomes cerr
+    cerr << "=============== About to start tun2socks to connect to SOCKS server on TCP " << str_socks_server_addr << "===============\n";
+
     busybox_bb_displayroutes(0x0fffu, 0);
     //cerr << "5 ... "; sleep(1); cerr << "4 ... "; sleep(1); cerr << "3 ... "; sleep(1); cerr << "2 ... "; sleep(1); cerr << "1 ..."; sleep(1); cerr << endl;
     busybox_bb_displayroutes(0x0fffu, 0);
@@ -326,6 +334,11 @@ extern "C" void VPN_Notify_SOCKS_Is_Listening(int const fd)
 {
     VPN::g_fd_listening_SOCKS = fd;
     VPN::g_fd_listening_SOCKS.notify_all();
+
+    if ( 0u == VPN::g_local_ephemeral_port_for_SOCKS )
+    {
+        last_words_exit("Could not determine ephemeral TCP listening port for SOCKS proxy. Bailing out...");
+    }
 
     static std::jthread mythread(VPN::Start);
 }

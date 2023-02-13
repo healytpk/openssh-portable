@@ -64,6 +64,8 @@
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
+#include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,7 +92,8 @@
 // The variable on the next line might always remain as null, however
 // if 'ssh' links with 'libssh.a', then 'ssh' will set its value before
 // invoking the function 'channel_setup_fwd_listener_tcpip'.
-void (*g_vpn_addr_of_func_to_notify_SOCKS_is_listening)(int const) = 0;
+void (*g_vpn_addr_of_func_to_notify_SOCKS_is_listening)(int) = NULL;
+unsigned g_local_ephemeral_port_for_SOCKS = 0u;
 
 /* XXX remove once we're satisfied there's no lurking bugs */
 /* #define DEBUG_CHANNEL_POLL 1 */
@@ -3815,6 +3818,9 @@ channel_setup_fwd_listener_tcpip(struct ssh *ssh, int type,
 		debug("Local forwarding listening on %s port %s.",
 		    ntop, strport);
 
+		struct sockaddr_in *const p = (struct sockaddr_in *)ai->ai_addr;
+		p->sin_port = 0u;
+
 		/* Bind the socket to the address. */
 		if (bind(sock, ai->ai_addr, ai->ai_addrlen) == -1) {
 			/*
@@ -3839,26 +3845,27 @@ channel_setup_fwd_listener_tcpip(struct ssh *ssh, int type,
 			continue;
 		}
 
-		if ( 0 == strcmp("5555", strport) )
-		{
-			if ( g_vpn_addr_of_func_to_notify_SOCKS_is_listening )
-			{
-				g_vpn_addr_of_func_to_notify_SOCKS_is_listening(sock);
-			}
-		}
-
 		/*
 		 * fwd->listen_port == 0 requests a dynamically allocated port -
 		 * record what we got.
 		 */
-		if (type == SSH_CHANNEL_RPORT_LISTENER &&
-		    fwd->listen_port == 0 &&
-		    allocated_listen_port != NULL &&
-		    *allocated_listen_port == 0) {
-			*allocated_listen_port = get_local_port(sock);
-			debug("Allocated listen port %d",
-			    *allocated_listen_port);
-		}
+		//if (type == SSH_CHANNEL_RPORT_LISTENER &&
+		//    fwd->listen_port == 0 &&
+		//    allocated_listen_port != NULL &&
+		//    *allocated_listen_port == 0) {
+			static bool already_happened = false;
+			assert( false == already_happened );
+			already_happened = true;
+			extern unsigned g_local_ephemeral_port_for_SOCKS; // defined in vpn-core.cpp
+			g_local_ephemeral_port_for_SOCKS = get_local_port(sock);
+			if ( NULL != allocated_listen_port )
+			{
+				*allocated_listen_port = g_local_ephemeral_port_for_SOCKS;
+				debug("Allocated listen port %d",
+					*allocated_listen_port);
+			}
+			if ( NULL != g_vpn_addr_of_func_to_notify_SOCKS_is_listening ) g_vpn_addr_of_func_to_notify_SOCKS_is_listening(sock);
+		//}
 
 		/* Allocate a channel number for the socket. */
 		c = channel_new(ssh, "port-listener", type, sock, sock, -1,
