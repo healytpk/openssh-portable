@@ -47,7 +47,7 @@ namespace VPN {
 struct DefaultGatewayEntry {
     unsigned metric;
     bool is_up;
-    string str_ip;
+    string str_ip, str_devname;
 
     //DefaultGatewayEntry(void) : metric(0u), str_ip(), is_up(false) {}
 
@@ -225,7 +225,7 @@ static Routing_Table_Summary get_default_gateways(void)
             static_assert( 8u == CHAR_BIT, "Can't deal with 16-Bit char's or whatever size they are" );
             char unsigned const *const p = static_cast<char unsigned const *>(static_cast<void const*>(&g));
             ss << static_cast<unsigned>(p[0]) << "." << static_cast<unsigned>(p[1]) << "." << static_cast<unsigned>(p[2]) << "." << static_cast<unsigned>(p[3]);
-            defgws.emplace((DefaultGatewayEntry){metric, flgs & 1u, std::move(ss).str()});
+            defgws.emplace((DefaultGatewayEntry){metric, flgs & 1u, std::move(ss).str(), devname});
             retval.lowest_metric = std::min(retval.lowest_metric, static_cast<unsigned>(metric));
             if ( flgs & 1u ) retval.lowest_metric_up = std::min(retval.lowest_metric_up, static_cast<unsigned>(metric));
         }
@@ -286,7 +286,7 @@ void create_unique_route_for_remote_SSH_server(Routing_Table_Summary const &rts)
         "add", str_net, str_ip_remote_SSH_server, "netmask", "255.255.255.255",
         "gw", const_cast<char*>(rts.gws.cbegin()->str_ip.c_str()),
         "metric", const_cast<char*>(str_metric.c_str()),
-        "dev", "ens33",   // REVISIT - FIX - Hardcoded ens33
+        "dev", const_cast<char*>(rts.gws.cbegin()->str_devname.c_str()),
         nullptr,
         // The environment variables should be here
         nullptr,
