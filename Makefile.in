@@ -120,8 +120,7 @@ SKOBJS=	ssh-sk-client.o
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
 	vpn/vpn-core.cpp.o \
-	vpn/vpn-linux-tun.o \
-	vpn/from_dynamo/checksum.o
+	vpn/vpn-linux-tun.o
 
 SOURCE_FILES_BUSYBOX = vpn/from_busybox_route/xconnect.c vpn/from_busybox_route/inet_common.c vpn/from_busybox_route/route.c \
   vpn/from_busybox_route/xfuncs_printf.c vpn/from_busybox_route/perror_msg.c vpn/from_busybox_route/xfunc_die.c \
@@ -338,6 +337,7 @@ clean:	regressclean
 	rm -f *.o *.lo *.a $(TARGETS) logintest config.cache config.log
 	rm -f ./vpn/from_busybox_route/*.o
 	rm -f ./vpn/from_badvpn_tun2socks/*.o
+	rm -f ./vpn/*.o
 	rm -f stampfile_*
 	rm -f *.out core survey
 	rm -f regress/check-perm$(EXEEXT)
