@@ -66,45 +66,77 @@ void tun_alloc(void)
     }
 }
 
-void bring_interface_up(int const fd, char const *const str_dev)
+void bring_interface_up(char const *const str_dev)
 {
-    //fprintf(stderr, "Bringing virtual network interface '%s' up. . . .", str_dev);
-
+#if 0
     char buf[300u] = "ifconfig ";
     strcat(buf,str_dev);
     strcat(buf," up");
     system(buf);
+#else
+    struct ifreq ifr = {0};
 
-    //fprintf(stderr, "Virtual network interface '%s' is now up", str_dev);
+    int const fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+    strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
+
+    ifr.ifr_addr.sa_family = AF_INET;
+
+    /* get */  ioctl(fd, SIOCGIFFLAGS, &ifr);
+    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
+    /* set */  ioctl(fd, SIOCSIFFLAGS, &ifr);
+
+    close(fd);
+#endif
 }
 
-void set_ip(int const fd, char const *const str_dev, char const *const str_ip)
+void set_ip(char const *const str_dev, char const *const str_ip, char const *const str_netmask)
 {
-    struct ifreq ifr = {0};
-    struct sockaddr_in addr = {0};
-
-    addr.sin_family = AF_INET;
-    //if ( 1 != inet_pton(addr.sin_family, str_ip, &addr.sin_addr) ) goto End;
-
 #if 0
-    std::strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
-    int const s = ::socket(addr.sin_family, SOCK_DGRAM, 0);
-    if ( -1 == s ) goto End;
-    ifr.ifr_addr = *(struct ::sockaddr*)&addr;
-    ((struct ::sockaddr_in *)&ifr.ifr_addr)->sinaddr.s_addr = htonl(0xFFFFFF00);
-    if ( -1 == ::ioctl(s, SIOCSIFADDR   , &ifr) ) goto End;
-    if ( -1 == ::ioctl(s, SIOCSIFNETMASK, &ifr) ) goto End;
-    if ( -1 == ::ioctl(s, SIOCGIFFLAGS, &ifr) ) goto End;
-    ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
-    if ( -1 == ::ioctl(s, SIOCSIFFLAGS, &ifr) ) goto End;
-    //wipe_out_ipv6(fd,str_dev);
-    retval = fd;
-#else
     char buf[300u] = "ifconfig ";
     strcat(buf,str_dev);
     strcat(buf," ");
     strcat(buf,str_ip);
     strcat(buf," netmask 255.255.255.0");
     system(buf);
+#else
+    struct ifreq ifr = {0};
+
+    int const fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+    strncpy(ifr.ifr_name, str_dev, IFNAMSIZ);
+
+    ifr.ifr_addr.sa_family = AF_INET;
+
+    struct sockaddr_in *const addr = (struct sockaddr_in*)&ifr.ifr_addr;
+
+    inet_pton(AF_INET, str_ip, &addr->sin_addr);
+    ioctl(fd, SIOCSIFADDR, &ifr);
+
+    inet_pton(AF_INET, str_netmask, &addr->sin_addr);
+    ioctl(fd, SIOCSIFNETMASK, &ifr);
+
+    close(fd);
 #endif
+}
+
+int is_interface_up(char const *const str_interface)
+{
+    int const sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if ( sock < 0 ) return 0;
+
+    int retval = 0;
+    struct ifreq ifr = {0};
+    strcpy(ifr.ifr_name, str_interface);
+    if ( ioctl(sock, SIOCGIFFLAGS, &ifr) < 0 )
+    {
+        perror("SIOCGIFFLAGS");
+        goto End;
+    }
+
+    retval = !!(ifr.ifr_flags & IFF_RUNNING);
+
+End:
+    close(sock);
+    return retval;
 }

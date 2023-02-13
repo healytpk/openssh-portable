@@ -24,8 +24,9 @@
 extern "C" int g_fd_tun;
 extern "C" char g_str_tun_ifnam[257u];
 extern "C" void tun_alloc(void);
-extern "C" void set_ip(int const fd, char const *const str_dev, char const *const str_ip);
-extern "C" void bring_interface_up(int const fd, char const *const str_dev);
+extern "C" void set_ip(char const *const str_dev, char const *const str_ip, char const *const str_netmask);
+extern "C" void bring_interface_up(char const *const str_dev);
+extern "C" int is_interface_up(char const *const str_interface);
 
 // The next one is defined in channels.c
 extern "C" long unsigned g_ip_address_of_remote_SSH_server = 0u;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
@@ -39,7 +40,7 @@ inline void last_words_exit(char const *const p)
 extern "C" int badvpn_main(int,char**);
 extern "C" int busybox_route_main(int,char**);
 extern "C" void busybox_bb_displayroutes(int noresolve, int netstatfmt) __attribute__((regparm(3),stdcall));
-
+extern "C" void busybox_lbb_prepare(const char *applet /*IF_FEATURE_INDIVIDUAL(, char **argv)*/);
 extern "C" int *busybox_bb_errno;
 
 namespace VPN {
@@ -134,10 +135,12 @@ static void Start(std::stop_token)
     cerr << "=============== New thread spawned : VPN Thread ===============\n";
 
     cerr << "VPN Thread: Setting IP address of TUN device. . .\n";
-    set_ip(g_fd_tun,g_str_tun_ifnam,"10.10.10.1");
+    set_ip(g_str_tun_ifnam,"10.10.10.1", "255.255.255.0");
     cerr << "VPN Thread: IP address of TUN device is now set.\n";
     cerr << "VPN Thread: Bringing TUN device up. . .\n";
-    bring_interface_up(g_fd_tun,g_str_tun_ifnam);
+    bring_interface_up(g_str_tun_ifnam);
+    cerr << "VPN Thread: Checking that the TUN device was brought up successfully. . .\n";
+    if ( ! is_interface_up(g_str_tun_ifnam) ) last_words_exit("FATAL ERROR: TUN device isn't up.");
     cerr << "VPN Thread: TUN device is now up.\n";
 
     Routing_Table_Summary const rts = get_default_gateways();
@@ -147,6 +150,7 @@ static void Start(std::stop_token)
         last_words_exit("Cannot find a default gateway on the routing table. Bailing out. . .");
     }
 
+    busybox_lbb_prepare("route");
     create_unique_route_for_remote_SSH_server(rts);
     create_route_for_VPN_gateway(rts, "10.10.10.2");
 
