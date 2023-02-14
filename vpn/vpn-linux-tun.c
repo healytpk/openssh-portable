@@ -7,17 +7,15 @@
 #include <stdbool.h>         // bool, true, false
 #include <stdio.h>           // sprintf
 #include <stdlib.h>          // system, abort
-#include <string.h>          // strncpy, memset
-#include <sys/ioctl.h>       // ioctl
+#include <string.h>          // strncpy, memset, strcmp
+
 #include <fcntl.h>           // open
-#include <linux/if.h>        // ifreq
-#include <linux/if_tun.h>
-#include <unistd.h>          // close
 #include <sys/socket.h>      // socket
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>       // htonl
-#include <dlfcn.h>           // dlsym
+#include <unistd.h>          // close
+#include <sys/ioctl.h>       // ioctl
+#include <linux/if.h>        // ifreq
+#include <linux/if_tun.h>    // TUNSETIFF
+#include <net/route.h>       // rtentry
 
 #define nullptr (0)
 
@@ -139,4 +137,28 @@ int is_interface_up(char const *const str_interface)
 End:
     close(sock);
     return retval;
+}
+
+void add_route(char const *const str_dest, char const *const str_netmask, char const *const str_gateway, char const *const str_dev, unsigned const metric)
+{
+    int const sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if ( sock < 0 ) return;
+
+    struct rtentry route = {0};
+
+    struct sockaddr_in *const addrGy = (struct sockaddr_in*)&route.rt_gateway;
+    struct sockaddr_in *const addrDn = (struct sockaddr_in*)&route.rt_dst    ;
+    struct sockaddr_in *const addrGk = (struct sockaddr_in*)&route.rt_genmask;
+
+    addrGy->sin_family = addrDn->sin_family = addrGk->sin_family = AF_INET;
+    addrGy->sin_addr.s_addr = inet_addr(str_gateway);
+    addrDn->sin_addr.s_addr = inet_addr(str_dest   );
+    addrGk->sin_addr.s_addr = inet_addr(str_netmask);
+
+    route.rt_flags = RTF_UP|RTF_GATEWAY;
+    route.rt_metric = metric + 1u;  // This seems to be zero-based instead of one-based
+
+    ioctl(sock, SIOCADDRT, &route);
+
+    close(sock);
 }

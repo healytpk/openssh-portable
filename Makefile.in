@@ -122,18 +122,6 @@ SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	vpn/vpn-core.cpp.o \
 	vpn/vpn-linux-tun.o
 
-SOURCE_FILES_BUSYBOX = vpn/from_busybox_route/xconnect.c vpn/from_busybox_route/inet_common.c vpn/from_busybox_route/route.c \
-  vpn/from_busybox_route/xfuncs_printf.c vpn/from_busybox_route/perror_msg.c vpn/from_busybox_route/xfunc_die.c \
-  vpn/from_busybox_route/ptr_to_globals.c vpn/from_busybox_route/signals.c vpn/from_busybox_route/verror_msg.c \
-  vpn/from_busybox_route/read.c vpn/from_busybox_route/fflush_stdout_and_exit.c \
-  vpn/from_busybox_route/time.c vpn/from_busybox_route/messages.c vpn/from_busybox_route/wfopen.c \
-  vpn/from_busybox_route/xfuncs.c vpn/from_busybox_route/full_write.c vpn/from_busybox_route/default_error_retval.c \
-  vpn/from_busybox_route/xatonum.c vpn/from_busybox_route/sysconf.c vpn/from_busybox_route/copyfd.c \
-  vpn/from_busybox_route/bb_strtonum.c vpn/from_busybox_route/getopt32.c vpn/from_busybox_route/safe_write.c \
-  vpn/from_busybox_route/safe_strncpy.c vpn/from_busybox_route/llist.c vpn/from_busybox_route/appletlib_STRIPPED_DOWN.c
-
-OBJ_FILES_BUSYBOX = $(addsuffix .o,$(SOURCE_FILES_BUSYBOX))
-
 SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
   vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
   vpn/from_badvpn_tun2socks/BDatagram_unix.c vpn/from_badvpn_tun2socks/BLog.c vpn/from_badvpn_tun2socks/BLog_syslog.c \
@@ -238,27 +226,15 @@ vpn/%.cpp.o: vpn/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # for simplicity assume all source depends on all headers
-stampfile_busybox: $(SOURCE_FILES_BUSYBOX) $(wildcard vpn/from_busybox_route/*.h vpn/from_busybox_route/*.hpp)
-	rm -rf ./vpn/from_busybox_route/*.o
-	echo $(SOURCE_FILES_BUSYBOX) | tr ' ' '\n' | while read line; do \
-	    $(CC) $(CFLAGS) $(CPPFLAGS) -c $${line} -o $${line}.o -include vpn/from_busybox_route/autoconf.h -D_GNU_SOURCE -DBB_VER="\"1.37.0.git\"" -DSKIP_applet_main; done
-	find ./vpn/from_busybox_route/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=busybox_"$$s }' > symbol_redefinitions_busybox.txt
-	find ./vpn/from_busybox_route/ -iname "*.o" | while read line; do cat symbol_redefinitions_busybox.txt | xargs -r -n2 objcopy $$line; done
-	echo > stampfile_busybox
-
-# for simplicity assume all source depends on all headers
 stampfile_badvpn: $(SOURCE_FILES_BADVPN) $(wildcard vpn/from_badvpn_tun2socks/*.h vpn/from_badvpn_tun2socks/*.hpp)
 	rm -rf ./vpn/from_badvpn_tun2socks/*.o
 	echo $(SOURCE_FILES_BADVPN) | tr ' ' '\n' | while read line; do \
 	    $(CC) $(CFLAGS) $(CPPFLAGS) -c $${line} -o $${line}.o -Ivpn/from_badvpn_tun2socks/ -DBADVPN_BREACTOR_BADVPN -DBADVPN_LINUX -DBADVPN_LITTLE_ENDIAN -DBADVPN_THREADWORK_USE_PTHREAD -DBADVPN_THREAD_SAFE=1 -DBADVPN_USE_EPOLL -DBADVPN_USE_INOTIFY -DBADVPN_USE_LINUX_INPUT -DBADVPN_USE_LINUX_RFKILL -DBADVPN_USE_SIGNALFD -DBADVPN_USE_SYSLOG; done
-	find ./vpn/from_badvpn_tun2socks/ -iname "*.o" | xargs -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=badvpn_"$$s }' > symbol_redefinitions_badvpn.txt
+	find ./vpn/from_badvpn_tun2socks/ -iname "*.o" | xargs --max-procs=0 -i -r -n1 nm "{}" | grep -Ev "( U )|( W )|( w )" | cut -d ' ' -f3 | sort | uniq | awk '{print "--redefine-sym "$$s"=badvpn_"$$s }' > symbol_redefinitions_badvpn.txt
 	echo "--redefine-sym open=open_FOR_badvpn" >> symbol_redefinitions_badvpn.txt
 	echo "--redefine-sym ioctl=ioctl_FOR_badvpn" >> symbol_redefinitions_badvpn.txt
 	find ./vpn/from_badvpn_tun2socks/ -iname "*.o" | while read line; do cat symbol_redefinitions_badvpn.txt | xargs -r -n2 objcopy $$line; done
 	echo > stampfile_badvpn
-
-vpn/from_busybox_route/%.c.o: stampfile_busybox
-	@echo -n " "
 
 vpn/from_badvpn_tun2socks/%.c.o: stampfile_badvpn
 	@echo -n " "
@@ -272,8 +248,8 @@ libssh.a: $(LIBSSH_OBJS)
 	$(AR) rv $@ $(LIBSSH_OBJS)
 	$(RANLIB) $@
 
-ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BUSYBOX) $(OBJ_FILES_BADVPN)
-	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BUSYBOX) $(OBJ_FILES_BADVPN)
+ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN)
+	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN)
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)
@@ -335,7 +311,6 @@ moduli:
 
 clean:	regressclean
 	rm -f *.o *.lo *.a $(TARGETS) logintest config.cache config.log
-	rm -f ./vpn/from_busybox_route/*.o
 	rm -f ./vpn/from_badvpn_tun2socks/*.o
 	rm -f ./vpn/*.o
 	rm -f stampfile_*

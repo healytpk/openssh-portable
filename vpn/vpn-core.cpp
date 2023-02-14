@@ -27,6 +27,7 @@ extern "C" void tun_alloc(void);
 extern "C" void set_ip(char const *const str_dev, char const *const str_ip, char const *const str_netmask);
 extern "C" void bring_interface_up(char const *const str_dev);
 extern "C" int is_interface_up(char const *const str_interface);
+extern "C" void add_route(char const *const str_dest, char const *const str_netmask, char const *const str_gateway, char const *const str_dev, unsigned const metric);
 
 // The next one is defined in channels.c
 extern "C" long unsigned g_ip_address_of_remote_SSH_server = 0u;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
@@ -38,10 +39,6 @@ inline void last_words_exit(char const *const p)
 }
 
 extern "C" int badvpn_main(int,char**);
-extern "C" int busybox_route_main(int,char**);
-extern "C" void busybox_bb_displayroutes(int noresolve, int netstatfmt) __attribute__((regparm(3),stdcall));
-extern "C" void busybox_lbb_prepare(const char *applet /*IF_FEATURE_INDIVIDUAL(, char **argv)*/);
-extern "C" int *busybox_bb_errno;
 
 namespace VPN {
 
@@ -76,47 +73,8 @@ std::atomic<int> g_fd_listening_SOCKS{-1};
 
 jthread g_thread_tun2socks;
 
-#if 0
-static void Deal_With_Routing_Table(void)
-{
-    static_assert( 8u == CHAR_BIT, "Cannot handle 16-Bit char's or whatever size they are" );
-
-    char unsigned const *const p = static_cast<char unsigned const*>(static_cast<void const*>(&g_ip_address_of_remote_SSH_server));
-
-    // g_ip_address_of_remote_SSH_server is always in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines.
-    // Strangely though, on machines where 8 == sizeof(unsigned long), the 4 bytes we want are at the beginning rather
-    // than at the end, i.e. it's stored as [a][b][c][d][0][0][0][0] instead of [0][0][0][0][a][b][c][d]
-    cout << "Must create unique entry in routing table for "
-         << static_cast<unsigned>(p[0]) << "."
-         << static_cast<unsigned>(p[1]) << "."
-         << static_cast<unsigned>(p[2]) << "."
-         << static_cast<unsigned>(p[3]) << endl;
-
-    cout << "Here's how your routing table currently looks:\n";
-
-    char *cmdline[] = {
-        "route",
-        "-n",
-        nullptr,
-        // The environment variables should be here
-        nullptr,
-        nullptr,
-    };
-
-    busybox_bb_displayroutes(0x0fffu, 0);
-
-    cout << "Do you wish to use 10.10.10.0/24 for the VPN?\n";
-    int i;
-    //std::cin >> i;
-}
-#endif
-
 void Enable(void)
 {
-    static int dummy_for_bb_errno = 0;
-
-    busybox_bb_errno = &dummy_for_bb_errno;
-
     dup2(fileno(stderr),fileno(stdout));  // cout becomes cerr
 
     //Deal_With_Routing_Table();
@@ -150,7 +108,6 @@ static void Start(std::stop_token)
         last_words_exit("Cannot find a default gateway on the routing table. Bailing out. . .");
     }
 
-    busybox_lbb_prepare("route");
     create_unique_route_for_remote_SSH_server(rts);
     create_route_for_VPN_gateway(rts, "10.10.10.2");
 
@@ -174,9 +131,7 @@ static void Start(std::stop_token)
 
     cerr << "=============== About to start tun2socks to connect to SOCKS server on TCP " << str_socks_server_addr << "===============\n";
 
-    busybox_bb_displayroutes(0x0fffu, 0);
     //cerr << "5 ... "; sleep(1); cerr << "4 ... "; sleep(1); cerr << "3 ... "; sleep(1); cerr << "2 ... "; sleep(1); cerr << "1 ..."; sleep(1); cerr << endl;
-    busybox_bb_displayroutes(0x0fffu, 0);
     cerr << "VPN: Entering 'main' of tun2socks. . .";
     int const retval = badvpn_main(11, cmdline);
     cerr << "VPN: 'main' of tun2socks has returned with value " << retval << endl;
@@ -256,48 +211,18 @@ static unsigned get_lowest_metric_or_die(Routing_Table_Summary const &rts)
 static void create_route_for_VPN_gateway(Routing_Table_Summary const &rts, char const *const str_new_VPN_def_gateway)
 {
     assert( false == rts.gws.empty() );
-
-    string const str_metric = std::to_string( get_lowest_metric_or_die(rts) - 1u );
-
-    char *cmdline[] = {
-        "route",
-        "add", "default", "gw", const_cast<char*>(str_new_VPN_def_gateway),
-        "metric", const_cast<char*>(str_metric.c_str()),
-        "dev", g_str_tun_ifnam,
-        nullptr,
-        // The environment variables should be here
-        nullptr,
-        nullptr,
-    };
-
-    busybox_route_main(9,cmdline);
+    add_route("0.0.0.0","0.0.0.0",str_new_VPN_def_gateway,"dummy",get_lowest_metric_or_die(rts) - 1u);
 }
 
 void create_unique_route_for_remote_SSH_server(Routing_Table_Summary const &rts)
 {
     assert( false == rts.gws.empty() );
 
-    string const str_metric = std::to_string( get_lowest_metric_or_die(rts) - 2u );
-
     char str_ip_remote_SSH_server[64u];
     char unsigned const *const p = (char unsigned const*)&g_ip_address_of_remote_SSH_server;
     std::sprintf(str_ip_remote_SSH_server,"%u.%u.%u.%u", (unsigned)p[0], (unsigned)p[1], (unsigned)p[2], (unsigned)p[3]);
 
-    char str_net[] = "-net";
-
-    char *cmdline[] = {
-        "route",
-        "add", str_net, str_ip_remote_SSH_server, "netmask", "255.255.255.255",
-        "gw", const_cast<char*>(rts.gws.cbegin()->str_ip.c_str()),
-        "metric", const_cast<char*>(str_metric.c_str()),
-        "dev", const_cast<char*>(rts.gws.cbegin()->str_devname.c_str()),
-        nullptr,
-        // The environment variables should be here
-        nullptr,
-        nullptr,
-    };
-
-    busybox_route_main(12,cmdline);
+    add_route(str_ip_remote_SSH_server,"255.255.255.255",rts.gws.cbegin()->str_ip.c_str(),"dummy",get_lowest_metric_or_die(rts) - 2u);
 }
 
 }  // close namespace 'VPN'
