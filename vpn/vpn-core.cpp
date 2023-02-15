@@ -20,6 +20,10 @@
 /* functions */ using std::move;
 /* types     */ using std::string; using std::string_view; using std::jthread;
 
+// I've made sure the function on the next line returns uint32_t and not
+// unsigned long. The value returned is in NetworkByte order (i.e. BigEndian)
+extern "C" std::uint32_t inet_addr(char const*);
+
 // The next five are defined in vpn/vpn-linux-tun.c
 extern "C" int g_fd_tun;
 extern "C" char g_str_tun_ifnam[257u];
@@ -27,7 +31,7 @@ extern "C" void tun_alloc(void);
 extern "C" void set_ip(char const *const str_dev, char const *const str_ip, char const *const str_netmask);
 extern "C" void bring_interface_up(char const *const str_dev);
 extern "C" int is_interface_up(char const *const str_interface);
-extern "C" void add_route(char const *const str_dest, char const *const str_netmask, char const *const str_gateway, char const *const str_dev, unsigned const metric);
+extern "C" void add_route(unsigned long const dest, unsigned long const netmask, unsigned long const gateway, char const *const str_dev, unsigned const metric);
 
 // The next one is defined in channels.c
 extern "C" long unsigned g_ip_address_of_remote_SSH_server = 0u;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
@@ -66,8 +70,14 @@ struct Routing_Table_Summary {
 };
 
 static Routing_Table_Summary get_default_gateways(void);
-static void create_route_for_VPN_gateway(Routing_Table_Summary const &rts, char const *const str_new_VPN_def_gateway);
-static void create_unique_route_for_remote_SSH_server(Routing_Table_Summary const &rts);
+
+static unsigned get_lowest_metric(Routing_Table_Summary const &rts)
+{
+    if ( rts.lowest_metric    >= 3u ) return rts.lowest_metric;
+    if ( rts.lowest_metric_up >= 3u ) return rts.lowest_metric_up;
+
+    return -1;
+}
 
 std::atomic<int> g_fd_listening_SOCKS{-1};
 
@@ -108,8 +118,20 @@ static void Start(std::stop_token)
         last_words_exit("Cannot find a default gateway on the routing table. Bailing out. . .");
     }
 
-    create_unique_route_for_remote_SSH_server(rts);
-    create_route_for_VPN_gateway(rts, "10.10.10.2");
+    unsigned const lowest_metric = get_lowest_metric(rts);
+
+    if ( -1 == lowest_metric )
+    {
+        std::stringstream ss;
+        ss << "No wiggle room on routing table for a lower metric. lowest_metric=" << rts.lowest_metric
+           << ", lowest_metric_up=" << rts.lowest_metric_up << endl;
+        last_words_exit( std::move(ss).str().c_str() );
+    }
+
+    cerr << "============================== Lowest Metric: " << lowest_metric << " ==================================" << endl;
+
+    add_route(g_ip_address_of_remote_SSH_server,0xFFFFFFFFu,::inet_addr(rts.gws.cbegin()->str_ip.c_str()),"dummy",lowest_metric - 2u);
+    add_route(                      0x00000000u,0x00000000u,::inet_addr("10.10.10.2"                    ),"dummy",lowest_metric - 1u);
 
     assert( 0u != g_local_ephemeral_port_for_SOCKS );
 
@@ -193,36 +215,6 @@ static Routing_Table_Summary get_default_gateways(void)
     fclose(fp);
 
     return retval;
-}
-
-static unsigned get_lowest_metric_or_die(Routing_Table_Summary const &rts)
-{
-    if ( rts.lowest_metric >= 3u ) return rts.lowest_metric;
-    else if ( rts.lowest_metric_up >= 3u ) return rts.lowest_metric_up;
-    else
-    {
-        std::stringstream ss;
-        ss << "No wiggle room on routing table for a lower metric. lowest_metric=" << rts.lowest_metric
-           << ", lowest_metric_up=" << rts.lowest_metric_up << endl;
-        last_words_exit( std::move(ss).str().c_str() );
-    }
-}
-
-static void create_route_for_VPN_gateway(Routing_Table_Summary const &rts, char const *const str_new_VPN_def_gateway)
-{
-    assert( false == rts.gws.empty() );
-    add_route("0.0.0.0","0.0.0.0",str_new_VPN_def_gateway,"dummy",get_lowest_metric_or_die(rts) - 1u);
-}
-
-void create_unique_route_for_remote_SSH_server(Routing_Table_Summary const &rts)
-{
-    assert( false == rts.gws.empty() );
-
-    char str_ip_remote_SSH_server[64u];
-    char unsigned const *const p = (char unsigned const*)&g_ip_address_of_remote_SSH_server;
-    std::sprintf(str_ip_remote_SSH_server,"%u.%u.%u.%u", (unsigned)p[0], (unsigned)p[1], (unsigned)p[2], (unsigned)p[3]);
-
-    add_route(str_ip_remote_SSH_server,"255.255.255.255",rts.gws.cbegin()->str_ip.c_str(),"dummy",get_lowest_metric_or_die(rts) - 2u);
 }
 
 }  // close namespace 'VPN'

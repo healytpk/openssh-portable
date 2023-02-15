@@ -139,7 +139,7 @@ End:
     return retval;
 }
 
-void add_route(char const *const str_dest, char const *const str_netmask, char const *const str_gateway, char const *const str_dev, unsigned const metric)
+void add_route(unsigned long const dest, unsigned long const netmask, unsigned long const gateway, char const *const str_dev, unsigned const metric)
 {
     int const sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
     if ( sock < 0 ) return;
@@ -151,9 +151,9 @@ void add_route(char const *const str_dest, char const *const str_netmask, char c
     struct sockaddr_in *const addrGk = (struct sockaddr_in*)&route.rt_genmask;
 
     addrGy->sin_family = addrDn->sin_family = addrGk->sin_family = AF_INET;
-    addrGy->sin_addr.s_addr = inet_addr(str_gateway);
-    addrDn->sin_addr.s_addr = inet_addr(str_dest   );
-    addrGk->sin_addr.s_addr = inet_addr(str_netmask);
+    addrGy->sin_addr.s_addr = gateway;
+    addrDn->sin_addr.s_addr = dest   ;
+    addrGk->sin_addr.s_addr = netmask;
 
     route.rt_flags = RTF_UP|RTF_GATEWAY;
     route.rt_metric = metric + 1u;  // This seems to be zero-based instead of one-based
