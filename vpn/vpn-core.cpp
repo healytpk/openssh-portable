@@ -46,14 +46,15 @@ extern "C" int badvpn_main(int,char**);
 
 namespace VPN {
 
-struct DefaultGatewayEntry {
+struct RoutingTableEntry {
     unsigned metric;
     bool is_up;
-    string str_ip, str_devname;
+    string str_gw, str_devname;
+    string str_dest, str_netmask;  // For default gateway: 0.0.0.0/0
 
     //DefaultGatewayEntry(void) : metric(0u), str_ip(), is_up(false) {}
 
-    bool operator<(DefaultGatewayEntry const &rhs) const
+    bool operator<(RoutingTableEntry const &rhs) const
     {
         if (  is_up && !rhs.is_up ) return true;
         if ( !is_up &&  rhs.is_up ) return false;
@@ -66,10 +67,15 @@ struct DefaultGatewayEntry {
 struct Routing_Table_Summary {
     unsigned lowest_metric;
     unsigned lowest_metric_up;
-    std::set<DefaultGatewayEntry> gws;
+    std::set<RoutingTableEntry> gws;
 };
 
-static Routing_Table_Summary get_default_gateways(void);
+static Routing_Table_Summary get_entire_routing_table(bool only_get_default_gateways = false);
+
+static inline Routing_Table_Summary get_default_gateways(void)
+{
+    return get_entire_routing_table(true);
+}
 
 static unsigned get_lowest_metric(Routing_Table_Summary const &rts)
 {
@@ -130,7 +136,7 @@ static void Start(std::stop_token)
 
     cerr << "============================== Lowest Metric: " << lowest_metric << " ==================================" << endl;
 
-    add_route(g_ip_address_of_remote_SSH_server,0xFFFFFFFFu,::inet_addr(rts.gws.cbegin()->str_ip.c_str()),"dummy",lowest_metric - 2u);
+    add_route(g_ip_address_of_remote_SSH_server,0xFFFFFFFFu,::inet_addr(rts.gws.cbegin()->str_gw.c_str()),"dummy",lowest_metric - 2u);
     add_route(                      0x00000000u,0x00000000u,::inet_addr("10.10.10.2"                    ),"dummy",lowest_metric - 1u);
 
     assert( 0u != g_local_ephemeral_port_for_SOCKS );
@@ -160,13 +166,22 @@ static void Start(std::stop_token)
     cerr << "=============== Thread finished : VPN Thread ===============\n";
 }
 
-static Routing_Table_Summary get_default_gateways(void)
+string ip_to_str(long unsigned const x)
+{
+    static_assert( 8u == CHAR_BIT, "Can't deal with 16-Bit char's or whatever size they are" );
+    char unsigned const *const p = static_cast<char unsigned const *>(static_cast<void const*>(&x));
+    std::ostringstream ss;
+    ss << static_cast<unsigned>(p[0]) << "." << static_cast<unsigned>(p[1]) << "." << static_cast<unsigned>(p[2]) << "." << static_cast<unsigned>(p[3]);
+    return std::move(ss).str();
+}
+
+static Routing_Table_Summary get_entire_routing_table(bool const only_get_default_routes)
 {
     Routing_Table_Summary retval;
     retval.lowest_metric    = -1;
     retval.lowest_metric_up = -1;
 
-    std::set<DefaultGatewayEntry> &defgws = retval.gws;
+    std::set<RoutingTableEntry> &defgws = retval.gws;
 
     char devname[64u], flags[16u];
     unsigned long d, g, m;
@@ -199,17 +214,11 @@ static Routing_Table_Summary get_default_gateways(void)
         if ( !(flgs & RTF_UP) ) continue; // Skip interfaces that are down
         */
 
-        if ( (0u == d) && (0u == m) )
-        {
-            using std::string; using std::to_string;
-            std::stringstream ss;
-            static_assert( 8u == CHAR_BIT, "Can't deal with 16-Bit char's or whatever size they are" );
-            char unsigned const *const p = static_cast<char unsigned const *>(static_cast<void const*>(&g));
-            ss << static_cast<unsigned>(p[0]) << "." << static_cast<unsigned>(p[1]) << "." << static_cast<unsigned>(p[2]) << "." << static_cast<unsigned>(p[3]);
-            defgws.emplace((DefaultGatewayEntry){metric, flgs & 1u, std::move(ss).str(), devname});
-            retval.lowest_metric = std::min(retval.lowest_metric, static_cast<unsigned>(metric));
-            if ( flgs & 1u ) retval.lowest_metric_up = std::min(retval.lowest_metric_up, static_cast<unsigned>(metric));
-        }
+        if ( only_get_default_routes && !((0u == d) && (0u == m)) ) continue;
+
+        defgws.emplace(RoutingTableEntry{metric, flgs & 1u, ip_to_str(g), devname, ip_to_str(d), ip_to_str(m)});
+        retval.lowest_metric = std::min(retval.lowest_metric, static_cast<unsigned>(metric));
+        if ( flgs & 1u ) retval.lowest_metric_up = std::min(retval.lowest_metric_up, static_cast<unsigned>(metric));
     }
 
     fclose(fp);
