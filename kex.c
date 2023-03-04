@@ -1,4 +1,4 @@
-/* $OpenBSD: kex.c,v 1.173 2022/11/07 10:05:38 dtucker Exp $ */
+/* $OpenBSD: kex.c,v 1.175 2023/02/28 21:31:50 dtucker Exp $ */
 /*
  * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
  *
@@ -1345,7 +1345,7 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
 	}
 	peer_version_string = sshbuf_dup_string(peer_version);
 	if (peer_version_string == NULL)
-		error_f("sshbuf_dup_string failed");
+		fatal_f("sshbuf_dup_string failed");
 	/* XXX must be same size for sscanf */
 	if ((remote_version = calloc(1, sshbuf_len(peer_version))) == NULL) {
 		error_f("calloc failed");
@@ -1403,10 +1403,6 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
 		    peer_version_string);
 		r = SSH_ERR_CONN_CLOSED; /* XXX */
 		goto out;
-	}
-	if ((ssh->compat & SSH_BUG_RSASIGMD5) != 0) {
-		logit("Remote version \"%.100s\" uses unsafe RSA signature "
-		    "scheme; disabling use of RSA keys", remote_version);
 	}
 	/* success */
 	r = 0;
