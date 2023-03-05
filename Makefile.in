@@ -43,7 +43,7 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
 CC=@CC@ -ggdb3
-CXX=g++ -std=c++23 -ggdb3
+CXX=g++ -rdynamic -fPIC -std=c++23 -ggdb3 $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g')
 LD=@LD@ -ggdb3
 CFLAGS=@CFLAGS@
 CXXFLAGS=$(CFLAGS)
@@ -119,8 +119,8 @@ SKOBJS=	ssh-sk-client.o
 
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
-	vpn/vpn-core.cpp.o \
-	vpn/vpn-linux-tun.o
+	vpn/vpn-core.cpp.o vpn/vpn-linux-tun.o \
+	vpn/AUTO_GENERATED_wxformbuilder.cpp.o vpn/GUI_Dialog_Main.cpp.o  vpn/main.cpp.o
 
 SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
   vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
@@ -249,7 +249,7 @@ libssh.a: $(LIBSSH_OBJS)
 	$(RANLIB) $@
 
 ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN)
-	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN)
+	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs) #-Wl,--unresolved-symbols=ignore-in-object-files -ldl
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)
