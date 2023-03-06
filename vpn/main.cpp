@@ -63,7 +63,7 @@ int main2(int argc, char **argv)
 */
 
 //IMPLEMENT_APP_NO_MAIN(App_gui_openssh_vpn); /* This creates the "main" function */
-IMPLEMENT_APP(App_gui_openssh_vpn); /* This creates the "main" function */
+//IMPLEMENT_APP(App_gui_openssh_vpn); /* This creates the "main" function */
 
 /* The method 'OnInit' is invoked from within the
     wxWidgets library, and cppcheck thinks that it's an
