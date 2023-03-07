@@ -43,9 +43,9 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
 CC=@CC@ -ggdb3
-CXX=g++ -rdynamic -fPIC -std=c++23 -ggdb3 $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g')
-LD=@LD@ -ggdb3
-CFLAGS=@CFLAGS@
+CXX=g++ -fPIC -std=c++23 -ggdb3 $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -include vpn/weak_symbols.hpp -D__const__=__weak__
+LD=@CC@ -ggdb3
+CFLAGS=-ggdb3 -Og -pipe -Wno-error=format-truncation -Wall -Wpointer-arith -Wuninitialized -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess -Wno-pointer-sign -Wno-unused-result -Wimplicit-fallthrough -Wmisleading-indentation -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -ftrapv -fzero-call-used-regs=all -fno-builtin-memset -fstack-protector-strong -fPIE
 CXXFLAGS=$(CFLAGS)
 CFLAGS_NOPIE=@CFLAGS_NOPIE@
 CPPFLAGS=-I. -I$(srcdir) @CPPFLAGS@ $(PATHS) @DEFS@
@@ -248,8 +248,15 @@ libssh.a: $(LIBSSH_OBJS)
 	$(AR) rv $@ $(LIBSSH_OBJS)
 	$(RANLIB) $@
 
+comma:= ,
+LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)now,,$(LDFLAGS))
+LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)relro,,$(LDFLAGS_FOR_SSH))
+LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)noexecstack,,$(LDFLAGS_FOR_SSH))
+LDFLAGS_FOR_SSH:=$(subst -pie,,$(LDFLAGS_FOR_SSH))
+
 ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN)
-	$(CXX) -o $@ $(SSHOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all) #-Wl,--unresolved-symbols=ignore-in-object-files -ldl
+	nasm -o vpn/pre_start.asm.o -f elf64 vpn/pre_start.asm
+	$(CXX) -o $@ vpn/pre_start.asm.o -e pre_start -Wl,--export-dynamic,-z,lazy $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell /usr/local/bin/wx-config --libs all) -ldl
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)

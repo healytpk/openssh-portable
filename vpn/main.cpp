@@ -1,74 +1,44 @@
 #include "main.hpp"
 
-#include <cstdlib>  // EXIT_FAILURE, abort
-#include <cstdint>  // uintptr_t
+#include <cstdlib>  // EXIT_FAILURE, exit
+#include <cstdint>  // uintptr_t, uint64_t
 #include <cstdio>   // puts
+#include <iostream> // cerr, endl
+
 #include <dlfcn.h>  // dlopen
 
-/*
-//extern wxAppConsole* (* wxAppConsoleBase::ms_appInitFn)(void) __attribute__((weak));
+#include "GUI_Dialog_Main.hpp"  // Dialog_Main
 
-int main(int argc, char **argv)
+using std::cerr; using std::endl;
+
+wxAppConsole *wxCreateApp(void)
 {
-    return wxEntry(argc, argv);
+    // REVISIT FIX - Must figure out the next line!
+    //wxAppConsole::CheckBuildOptions("3" "." "1" "." "5" " (" "wchar_t" ",compiler with C++ ABI compatible with gcc 4" ",wx containers" ",compatible with 3.0" ")", "your program");
+    return new App_gui_openssh_vpn;
 }
 
-App_gui_openssh_vpn& wxGetApp() { return *static_cast<App_gui_openssh_vpn*>(wxApp::GetInstance()); }
+wxAppInitializer wxTheAppInitializer((wxAppInitializerFunction)wxCreateApp);
 
-wxAppConsole *wxCreateApp() { wxAppConsole::CheckBuildOptions("3" "." "1" "." "5" " (" "wchar_t" ",compiler with C++ ABI compatible with gcc 4" ",wx containers" ",compatible with 3.0" ")", "your program"); return new App_gui_openssh_vpn; }
-
-wxAppInitializer wxTheAppInitializer((wxAppInitializerFunction) wxCreateApp);;
-
-int Load_GUI_Libraries(void) __attribute__((constructor));
-int Load_GUI_Libraries(void)
+App_gui_openssh_vpn &wxGetApp(void)
 {
-    //std::abort();
+    return *static_cast<App_gui_openssh_vpn*>(wxApp::GetInstance());
+}
 
-    using std::uintptr_t;
+void App_gui_openssh_vpn::RecreateGUI(void)
+{
+    wxWindow *const topwindow = GetTopWindow();
 
-    uintptr_t r = 1u;
-
-    r *= (uintptr_t)dlopen("libwx_gtk3u_core-3.1.so.5", RTLD_NOW|RTLD_GLOBAL);
-    r *= (uintptr_t)dlopen("libwx_baseu-3.1.so.5",      RTLD_NOW|RTLD_GLOBAL);
-
-    if ( 0u == r )
+    if ( topwindow )
     {
-        std::puts("Cannot load shared libraries for wxWidgets");
-        std::exit(EXIT_FAILURE);
+        SetTopWindow(NULL);
+        topwindow->Destroy();
     }
 
-    return -1;
+    g_p_dlgmain = new Dialog_Main(nullptr);
+
+    g_p_dlgmain->Show();   /* Just let this throw if it fails */
 }
-
-struct MyClass {
-    MyClass(void)
-    {
-        Load_GUI_Libraries();
-    }
-};
-
-//MyClass g_dummy;
-
-int main2(int argc, char **argv)
-{
-    std::puts("========== First line of main ==========");
-    wxEntryStart(argc,argv);
-    std::puts("========== 2 line of main ==========");
-    wxTheApp->CallOnInit();
-    std::puts("========== 3 line of main ==========");
-    wxTheApp->OnRun();
-    std::puts("========== 4 line of main ==========");
-    return 0;
-}
-*/
-
-//IMPLEMENT_APP_NO_MAIN(App_gui_openssh_vpn); /* This creates the "main" function */
-//IMPLEMENT_APP(App_gui_openssh_vpn); /* This creates the "main" function */
-
-/* The method 'OnInit' is invoked from within the
-    wxWidgets library, and cppcheck thinks that it's an
-    unused function */
-// cppcheck-suppress unusedFunction symbolName=OnInit
 
 bool App_gui_openssh_vpn::OnInit(void)
 {
@@ -77,4 +47,29 @@ bool App_gui_openssh_vpn::OnInit(void)
 	this->RecreateGUI();
 
 	return true;
+}
+
+void Load_GUI_Libraries(void) __attribute__((constructor));
+void Load_GUI_Libraries(void)
+{
+    cerr << "============== Load_GUI_Libraries - marked with __constructor__ ===============" << endl;
+
+    bool ok = true;
+
+    ok = ok && dlopen("libgtk-3.so.0", RTLD_NOW|RTLD_GLOBAL);
+//  ok = ok && dlopen("", RTLD_NOW|RTLD_GLOBAL);
+//  ok = ok && dlopen("",      RTLD_NOW|RTLD_GLOBAL);
+
+    if ( ok ) return;
+
+
+    cerr << "Cannot load shared libraries for GTK+3.0" << endl;
+    std::exit(EXIT_FAILURE);
+}
+
+int main(int argc, char **argv)
+{
+    // Before main has been entered, we had:
+    //  pre_start -> _start -> _libc_start_main -> main
+    return wxEntry(argc, argv);
 }
