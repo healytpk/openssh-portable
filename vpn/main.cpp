@@ -9,7 +9,7 @@
 
 #include "GUI_Dialog_Main.hpp"  // Dialog_Main
 
-using std::cerr; using std::endl;
+using std::cout; using std::cerr; using std::endl;
 
 wxAppConsole *wxCreateApp(void)
 {
@@ -49,27 +49,20 @@ bool App_gui_openssh_vpn::OnInit(void)
 	return true;
 }
 
-void Load_GUI_Libraries(void) __attribute__((constructor));
-void Load_GUI_Libraries(void)
-{
-    cerr << "============== Load_GUI_Libraries - marked with __constructor__ ===============" << endl;
-
-    bool ok = true;
-
-    ok = ok && dlopen("libgtk-3.so.0", RTLD_NOW|RTLD_GLOBAL);
-//  ok = ok && dlopen("", RTLD_NOW|RTLD_GLOBAL);
-//  ok = ok && dlopen("",      RTLD_NOW|RTLD_GLOBAL);
-
-    if ( ok ) return;
-
-
-    cerr << "Cannot load shared libraries for GTK+3.0" << endl;
-    std::exit(EXIT_FAILURE);
-}
+extern "C" void Load_GUI_Libraries(void);
+extern "C" int ssh_client_main(int,char**);
 
 int main(int argc, char **argv)
 {
     // Before main has been entered, we had:
     //  pre_start -> _start -> _libc_start_main -> main
-    return wxEntry(argc, argv);
+
+    if ( argc < 2 )
+    {
+        Load_GUI_Libraries();
+        return wxEntry(argc, argv);
+    }
+
+    cout << "This is the console program :-)" << endl;
+    return ssh_client_main(argc,argv);
 }

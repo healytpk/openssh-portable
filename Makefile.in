@@ -43,7 +43,7 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
 CC=@CC@ -ggdb3
-CXX=g++ -fPIC -std=c++23 -ggdb3 $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -include vpn/weak_symbols.hpp -D__const__=__weak__
+CXX=g++ -fPIC -std=c++23 -ggdb3 $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
 LD=@CC@ -ggdb3
 CFLAGS=-ggdb3 -Og -pipe -Wno-error=format-truncation -Wall -Wpointer-arith -Wuninitialized -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess -Wno-pointer-sign -Wno-unused-result -Wimplicit-fallthrough -Wmisleading-indentation -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -ftrapv -fzero-call-used-regs=all -fno-builtin-memset -fstack-protector-strong -fPIE
 CXXFLAGS=$(CFLAGS)
@@ -120,7 +120,7 @@ SKOBJS=	ssh-sk-client.o
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
 	vpn/vpn-core.cpp.o vpn/vpn-linux-tun.o \
-	vpn/AUTO_GENERATED_wxformbuilder.cpp.o vpn/GUI_Dialog_Main.cpp.o  vpn/main.cpp.o
+	vpn/AUTO_GENERATED_wxformbuilder.cpp.o vpn/GUI_Dialog_Main.cpp.o vpn/main.cpp.o vpn/stubs.cpp.o
 
 SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
   vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
@@ -254,9 +254,17 @@ LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)relro,,$(LDFLAGS_FOR_SSH))
 LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)noexecstack,,$(LDFLAGS_FOR_SSH))
 LDFLAGS_FOR_SSH:=$(subst -pie,,$(LDFLAGS_FOR_SSH))
 
-ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN)
-	nasm -o vpn/pre_start.asm.o -f elf64 vpn/pre_start.asm
-	$(CXX) -o $@ vpn/pre_start.asm.o -e pre_start -Wl,--export-dynamic,-z,lazy $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell /usr/local/bin/wx-config --libs all) -ldl
+vpn/pre_start.aso: vpn/pre_start.asm
+	nasm -o $@ -f elf64 $<
+
+vpn/stubs.cpp.o: vpn/stubs.cpp.unique_rule
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -x c++ -c $< -o $@ $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gdk-3.0)
+
+ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start.aso
+	# First  line links normally so that the ELF file has a NEEDED for gtk, pango, cairo, and a few others
+	# Second line creates an executable with unresolved symbols which are later resolved with dlopen
+	#$(CXX)                                                                                                          -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all)
+	 $(CXX) -DVPN_DYNAMICALLY_LOAD_GUI_LIBS -Wl,--unresolved-symbols=ignore-in-object-files,--export-dynamic,-z,lazy -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ') -ldl
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)

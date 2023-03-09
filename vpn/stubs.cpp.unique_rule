@@ -1,0 +1,62 @@
+#ifdef VPN_DYNAMICALLY_LOAD_GUI_LIBS
+
+#   define _GNU_SOURCE    // required for RTLD_NEXT with dlsym
+#   include <iostream>    // cerr, endl
+#   include <dlfcn.h>     // dlsym
+#   include <gdk/gdk.h>   // gboolean, GdkEvent
+
+    extern "C" {
+
+        gboolean gtk_true(void)
+        {
+            static gboolean (*const p)(void) = reinterpret_cast<gboolean(*)(void)>(  ::dlsym(RTLD_NEXT, "gtk_true")  );
+
+            return p();
+        }
+
+        void gtk_main_do_event(GdkEvent *const arg)
+        {
+            static void (*const p)(GdkEvent*) = reinterpret_cast<void(*)(GdkEvent*)>(  ::dlsym(RTLD_NEXT, "gtk_main_do_event")  );
+
+            p(arg);
+        }
+
+        static char const *const g_strs_dyn_libs[] = {
+            "libpng16.so.16",
+            "libfontconfig.so.1",
+            "libglib-2.0.so.0",
+            "libgobject-2.0.so.0",
+            "libpango-1.0.so.0",
+            "libpangoft2-1.0.so.0",
+            "libgio-2.0.so.0",
+            "libgdk_pixbuf-2.0.so.0",
+            "libcairo.so.2",
+            "libpangocairo-1.0.so.0",
+            "libgdk-3.so.0",
+            "libgtk-3.so.0",
+            "libSM.so.6",
+            "libX11.so.6",
+            nullptr
+        };
+
+        void Load_GUI_Libraries(void)
+        {
+            using std::cerr; using std::endl;
+
+            for ( char const *const *pp = g_strs_dyn_libs; nullptr != *pp; ++pp )
+            {
+                if ( nullptr == dlopen(*pp, RTLD_LAZY | RTLD_GLOBAL) )
+                {
+                    cerr << "ERROR loading library: " << *pp << endl;
+                    std::abort();
+                }
+            }
+        }
+
+} // close extern "C"
+
+#else
+
+    extern "C" void Load_GUI_Libraries(void) {}
+
+#endif
