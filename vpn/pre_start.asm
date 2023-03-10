@@ -6,8 +6,37 @@
 
 extern Load_GUI_Libraries
 extern _start
+;extern dlopen
 
 section .text
+
+	dlopen_libc:
+	   ret
+       ; save all the register values we're going to use
+       push rax
+       push rsi
+       push rdi
+       push rdx
+
+       ;zero out the registers we are going to need
+       xor rax, rax
+       xor rsi, rsi
+       xor rdi, rdi
+       xor rdx, rdx
+
+	   ; load the library
+	   push 0x006f732e6362696c ; "libc.so\0"
+	   mov rdi, rsp
+	   sub rdi, 8
+	   mov rsi, 2              ; RTLD_NOW=2
+	   ;call dlopen
+       add rsp,8               ; Pop item off top of stack and discard
+
+       pop rdx
+       pop rdi
+       pop rsi
+       pop rax
+       ret
 
     print8bytes:  ; This is a function that returns void
        ; Two parameters:
@@ -65,6 +94,8 @@ section .text
        ; we will use the frame pointer 'rbp' to keep track of it.
        push rbp
        mov rbp, rsp
+
+       ;call dlopen_libc
 
        push r9    ; save because we'll use it - pop it back later
        push r8    ; save because we'll use it - pop it back later

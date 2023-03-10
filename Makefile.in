@@ -42,9 +42,9 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_SSH_PIDDIR=\"$(piddir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
-CC=@CC@ -ggdb3
-CXX=g++ -fPIC -std=c++23 -ggdb3 $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
-LD=@CC@ -ggdb3
+CC=@CC@ -fPIC -ggdb3
+CXX=g++ -fPIC -ggdb3 -std=c++23  $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
+LD=@CC@ -fPIC -ggdb3
 CFLAGS=-ggdb3 -Og -pipe -Wno-error=format-truncation -Wall -Wpointer-arith -Wuninitialized -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess -Wno-pointer-sign -Wno-unused-result -Wimplicit-fallthrough -Wmisleading-indentation -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -ftrapv -fzero-call-used-regs=all -fno-builtin-memset -fstack-protector-strong -fPIE
 CXXFLAGS=$(CFLAGS)
 CFLAGS_NOPIE=@CFLAGS_NOPIE@
@@ -269,7 +269,20 @@ ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start
 	# First  line links normally so that the ELF file has a NEEDED for gtk, pango, cairo, and a few others
 	# Second line creates an executable with unresolved symbols which are later resolved with dlopen
 	#$(CXX)                                                                                                          -static -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all)
-	 $(CXX) -DVPN_DYNAMICALLY_LOAD_GUI_LIBS -Wl,--unresolved-symbols=ignore-in-object-files,--export-dynamic,-z,lazy -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(OBJ_FILES_BADVPN) $(shell wx-config --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ')  -Wl,-Bstatic $(LIBS) $(GSSLIBS) $(CHANNELLIBS) -static-libstdc++ -static-libgcc -dl -Wl,-Bdynamic,--as-needed
+	$(CXX) -o $@ \
+	       -DVPN_DYNAMICALLY_LOAD_GUI_LIBS -Wl,--unresolved-symbols=ignore-in-object-files,--export-dynamic,-z,lazy \
+	       -e pre_start vpn/pre_start.aso  \
+	       $(SSHOBJS) $(OBJ_FILES_BADVPN)  \
+	       $(LDFLAGS_FOR_SSH) \
+	       $(shell wx-config --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ') \
+	       -static-libstdc++ -static-libgcc \
+	       -Wl,-Bstatic \
+	       -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) -dl \
+	       /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
+	       -Wl,-Bdynamic,--as-needed  # must have this at the end
+
+# -lstdc++ $(path_to_sos)libc.a -lm -lc -lgcc -lc 
+# \/usr/lib/x86_64-linux-gnu/libc.a -dl \
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)
@@ -332,7 +345,7 @@ moduli:
 clean:	regressclean
 	rm -f *.o *.lo *.a $(TARGETS) logintest config.cache config.log
 	rm -f ./vpn/from_badvpn_tun2socks/*.o
-	rm -f ./vpn/*.o
+	rm -f ./vpn/*.o ./vpn/*.aso
 	rm -f stampfile_*
 	rm -f *.out core survey
 	rm -f regress/check-perm$(EXEEXT)

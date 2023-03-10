@@ -65,10 +65,26 @@ extern "C" void Load_GUI_Libraries(void);
 
 extern "C" int ssh_client_main(int,char**);
 
+//char *__progname = "ssh";
+
+extern "C" void dummy_func_from_dummy_library(void);
+
 int main(int argc, char **argv)
 {
     // Before main has been entered, we had:
     //  pre_start -> _start -> _libc_start_main -> main
+
+/*
+    static char const str_libc[] = "libc.so.6";
+
+    if ( nullptr == dlopen(str_libc, RTLD_LAZY | RTLD_GLOBAL) )
+    {
+        cerr << "ERROR loading library: " << str_libc << endl;
+        std::abort();
+    }
+*/
+
+    //dummy_func_from_dummy_library();
 
     if ( argc < 2 )
     {
