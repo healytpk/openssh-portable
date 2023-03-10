@@ -11,19 +11,31 @@
 
 using std::cout; using std::cerr; using std::endl;
 
-wxAppConsole *wxCreateApp(void)
-{
-    // REVISIT FIX - Must figure out the next line!
-    //wxAppConsole::CheckBuildOptions("3" "." "1" "." "5" " (" "wchar_t" ",compiler with C++ ABI compatible with gcc 4" ",wx containers" ",compatible with 3.0" ")", "your program");
-    return new App_gui_openssh_vpn;
-}
+#if 0
 
-wxAppInitializer wxTheAppInitializer((wxAppInitializerFunction)wxCreateApp);
+DECLARE_APP(App_gui_openssh_vpn);
+IMPLEMENT_APP(App_gui_openssh_vpn);
+
+#else
+
+extern App_gui_openssh_vpn &wxGetApp(void);
 
 App_gui_openssh_vpn &wxGetApp(void)
 {
     return *static_cast<App_gui_openssh_vpn*>(wxApp::GetInstance());
 }
+
+wxAppConsole *wxCreateApp(void)
+{
+    wxAppConsole::CheckBuildOptions(
+        "3" "." "2" " (" "wchar_t" ",compiler with C++ ABI compatible with gcc 4" ",wx containers" ",compatible with 3.0" ")", "your program");
+
+    return new App_gui_openssh_vpn;
+}
+
+wxAppInitializer wxTheAppInitializer((wxAppInitializerFunction) wxCreateApp);
+
+#endif
 
 void App_gui_openssh_vpn::RecreateGUI(void)
 {
@@ -50,6 +62,7 @@ bool App_gui_openssh_vpn::OnInit(void)
 }
 
 extern "C" void Load_GUI_Libraries(void);
+
 extern "C" int ssh_client_main(int,char**);
 
 int main(int argc, char **argv)

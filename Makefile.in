@@ -254,6 +254,11 @@ LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)relro,,$(LDFLAGS_FOR_SSH))
 LDFLAGS_FOR_SSH:=$(subst -Wl$(comma)-z$(comma)noexecstack,,$(LDFLAGS_FOR_SSH))
 LDFLAGS_FOR_SSH:=$(subst -pie,,$(LDFLAGS_FOR_SSH))
 
+# Not sure which variable contains -lgcc_s so I remove it from all three
+LDFLAGS_FOR_SSH:=$(subst -lgcc_s,,$(LDFLAGS_FOR_SSH))
+GSSLIBS:=$(subst -lgcc_s,,$(GSSLIBS))
+CHANNELLIBS:=$(subst -lgcc_s,,$(CHANNELLIBS))
+
 vpn/pre_start.aso: vpn/pre_start.asm
 	nasm -o $@ -f elf64 $<
 
@@ -263,8 +268,8 @@ vpn/stubs.cpp.o: vpn/stubs.cpp.unique_rule
 ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start.aso
 	# First  line links normally so that the ELF file has a NEEDED for gtk, pango, cairo, and a few others
 	# Second line creates an executable with unresolved symbols which are later resolved with dlopen
-	#$(CXX)                                                                                                          -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all)
-	 $(CXX) -DVPN_DYNAMICALLY_LOAD_GUI_LIBS -Wl,--unresolved-symbols=ignore-in-object-files,--export-dynamic,-z,lazy -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ') -ldl
+	#$(CXX)                                                                                                          -static -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) $(OBJ_FILES_BADVPN) $(shell wx-config --libs all)
+	 $(CXX) -DVPN_DYNAMICALLY_LOAD_GUI_LIBS -Wl,--unresolved-symbols=ignore-in-object-files,--export-dynamic,-z,lazy -o $@ vpn/pre_start.aso -e pre_start $(SSHOBJS) $(LDFLAGS_FOR_SSH) -lssh -lopenbsd-compat $(OBJ_FILES_BADVPN) $(shell wx-config --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ')  -Wl,-Bstatic $(LIBS) $(GSSLIBS) $(CHANNELLIBS) -static-libstdc++ -static-libgcc -dl -Wl,-Bdynamic,--as-needed
 
 sshd$(EXEEXT): libssh.a	$(LIBCOMPAT) $(SSHDOBJS)
 	$(LD) -o $@ $(SSHDOBJS) $(LDFLAGS) -lssh -lopenbsd-compat $(SSHDLIBS) $(LIBS) $(GSSLIBS) $(K5LIBS) $(CHANNELLIBS)
