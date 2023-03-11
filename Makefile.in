@@ -281,6 +281,8 @@ ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start
 	       /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
 	       -Wl,-Bdynamic,--as-needed  # must have this at the end
 
+#/usr/lib/x86_64-linux-gnu/libm.a \
+#-nolibc /usr/lib/x86_64-linux-gnu/libc.a \
 # -lstdc++ $(path_to_sos)libc.a -lm -lc -lgcc -lc 
 # \/usr/lib/x86_64-linux-gnu/libc.a -dl \
 
