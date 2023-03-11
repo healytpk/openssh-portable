@@ -71,7 +71,7 @@ extern "C" void dummy_func_from_dummy_library(void);
 
 extern "C" void load_libs(void)  // gets called from pre_start (before _start)
 {
-    ::dlopen("lib9.so.6",RTLD_NOW|RTLD_GLOBAL);
+    //::dlopen("lib9.so7",RTLD_LAZY|RTLD_GLOBAL);
 }
 
 int main(int argc, char **argv)
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     }
 */
 
-    dummy_func_from_dummy_library();
+    //dummy_func_from_dummy_library();
 
     if ( argc < 2 )
     {

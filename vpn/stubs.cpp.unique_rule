@@ -21,27 +21,13 @@
             p(arg);
         }
 
-#if 0
-        gboolean gtk_init_check(void)
-        {
-            return 1;
-
-            static gboolean (*const p)(void) = reinterpret_cast<gboolean(*)(void)>(  ::dlsym(RTLD_NEXT, "gtk_init_check")  );
-
-            return p();
-        }
-
-        void gtk_disable_setlocale(void)
-        {
-            return;
-
-            static void (*const p)(void) = reinterpret_cast<void(*)(void)>(  ::dlsym(RTLD_NEXT, "gtk_disable_setlocale")  );
-
-            p();
-        }
-#endif
-
-#if 1  // These are the one's from readelf -a | grep NEEDED
+#if 1
+        static char const *const g_strs_dyn_libs[] = {
+            "libgtk-3.so",
+            //"libX11.so",
+            nullptr
+        };
+#elif 0  // These are the one's from readelf -a | grep NEEDED
         static char const *const g_strs_dyn_libs[] = {
             "libpng16.so.16",
             "libfontconfig.so.1",

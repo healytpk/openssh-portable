@@ -276,10 +276,8 @@ ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start
 	       $(LDFLAGS_FOR_SSH) \
 	       $(shell wx-config --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ') \
 	       -static-libstdc++ -static-libgcc \
-	       -Wl,-Bstatic \
-	       -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) -dl \
-	       /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a \
-	       -Wl,-Bdynamic,--as-needed  # must have this at the end
+	       -Wl,-Bstatic -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) -dl \
+	       -Wl,-Bdynamic,--as-needed # must have this at the end
 
 #/usr/lib/x86_64-linux-gnu/libm.a \
 #-nolibc /usr/lib/x86_64-linux-gnu/libc.a \
