@@ -16,7 +16,7 @@ using std::cout; using std::cerr; using std::endl;
 DECLARE_APP(App_gui_openssh_vpn);
 IMPLEMENT_APP(App_gui_openssh_vpn);
 
-#else
+#elif 0
 
 extern App_gui_openssh_vpn &wxGetApp(void);
 
@@ -34,6 +34,35 @@ wxAppConsole *wxCreateApp(void)
 }
 
 wxAppInitializer wxTheAppInitializer((wxAppInitializerFunction) wxCreateApp);
+
+#else
+
+extern App_gui_openssh_vpn& wxGetApp(void);
+
+wxAppConsole *wxCreateApp()
+{
+    wxAppConsole::CheckBuildOptions(
+        "2" "." "8" " (" "debug" "," "ANSI" ",compiler with C++ ABI " "1016" ",wx containers" ",compatible with 2.6" ")", "your program");
+        return new App_gui_openssh_vpn;
+}
+
+wxAppInitializer wxTheAppInitializer((wxAppInitializerFunction) wxCreateApp);
+
+extern App_gui_openssh_vpn& wxGetApp();
+App_gui_openssh_vpn& wxGetApp()
+{
+    return *static_cast<App_gui_openssh_vpn*>(wxApp::GetInstance());
+}
+
+/*
+int main(int argc, char **argv)
+{
+    return wxEntry(argc, argv);
+}
+*/
+
+extern bool wxThemeUsewin32;
+static struct wxThemeUserForwin32 { wxThemeUserForwin32() { wxThemeUsewin32 = true; } } wxThemeDoUsewin32;;
 
 #endif
 

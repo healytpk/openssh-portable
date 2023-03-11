@@ -23,8 +23,8 @@
 
 #if 1
         static char const *const g_strs_dyn_libs[] = {
-            "libgtk-3.so",
-            //"libX11.so",
+            //"libgtk-3.so",
+            "libX11.so",
             nullptr
         };
 #elif 0  // These are the one's from readelf -a | grep NEEDED
