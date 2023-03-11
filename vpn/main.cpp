@@ -69,22 +69,27 @@ extern "C" int ssh_client_main(int,char**);
 
 extern "C" void dummy_func_from_dummy_library(void);
 
+extern "C" void load_libs(void)  // gets called from pre_start (before _start)
+{
+    ::dlopen("lib9.so.6",RTLD_NOW|RTLD_GLOBAL);
+}
+
 int main(int argc, char **argv)
 {
     // Before main has been entered, we had:
     //  pre_start -> _start -> _libc_start_main -> main
 
 /*
-    static char const str_libc[] = "libc.so.6";
+    static char const str_libc[] = "lib9.so";
 
-    if ( nullptr == dlopen(str_libc, RTLD_LAZY | RTLD_GLOBAL) )
+    if ( nullptr == dlopen(str_libc, 0x101) )
     {
         cerr << "ERROR loading library: " << str_libc << endl;
         std::abort();
     }
 */
 
-    //dummy_func_from_dummy_library();
+    dummy_func_from_dummy_library();
 
     if ( argc < 2 )
     {
