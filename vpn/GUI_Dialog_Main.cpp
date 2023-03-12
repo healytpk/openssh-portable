@@ -50,14 +50,9 @@ void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
     j = std::jthread(
 	[&argv](std::stop_token)->void
 	  {
-	      //Redirect_Output::RedirectFILE(stderr);
-	      //Redirect_Output::printf("I like my %i axolotls", 7);
-	      //fprintf(Redirect_Output::GetHandle(), "I like my %i axolotls\n", 7);
 	      fputs("A: I like my seven axolotls\n", Redirect_Output::GetHandle());
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
-	      //Redirect_Output::RedirectFILE(stdout);
-	      stdout = Redirect_Output::GetHandle();
-	      stderr = Redirect_Output::GetHandle();
+	      Redirect_Output::RedirectAll();
 	      fputs("B: I like my seven axolotls\n", stdout);
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
 	      puts("C: I like my seven axolotls\n");

@@ -9,8 +9,15 @@
 #include <cstring>  // strlen
 #include <string>   // string
 
+//#include <cxxabi.h>
+#include <ext/stdio_filebuf.h>
+
 #include "GUI_Dialog_Main.hpp"  // g_p_dlgmain
 #include "wx_custom_event.hpp"  // EventClass_StringView
+
+#include <fstream>     // REMOVE THIS
+#include <iostream>    // endl
+#include <streambuf>
 
 namespace Redirect_Output {
 
@@ -86,34 +93,34 @@ namespace Redirect_Output {
         return 0;
     }
 
-    inline void RedirectFILE(FILE *&fp)
+    class streambuf_redirect : public std::streambuf {
+
+        using std::streambuf::streambuf;
+
+        virtual std::streamsize xsputn(char const *const s, std::streamsize const count)
+        {
+            return writer(nullptr,s,count);
+        }
+    };
+
+    inline void RedirectAll(void)
     {
-        //f = GetHandle();
-        //f->_fileno = GetHandle()->_fileno;
-        *fp = *GetHandle();
+        stdout = stderr = GetHandle();
+
+        //static __gnu_cxx::stdio_filebuf<char> buf0( GetHandle(), std::ios::out );
+        //static __gnu_cxx::stdio_filebuf<char> buf1( GetHandle(), std::ios::out );
+        //static __gnu_cxx::stdio_filebuf<char> buf2( GetHandle(), std::ios::out );
+
+        static streambuf_redirect buf0,buf1,buf2;
+
+        std::cout.rdbuf( &buf0 );
+        std::clog.rdbuf( &buf1 );
+        std::cerr.rdbuf( &buf2 );
     }
 }
 
+
+
+
+
 #endif
-
-/*
-#include <fstream>     // REMOVE THIS
-#include <iostream>    // endl
-#include <streambuf>
-
-class streambuf_redirect : public std::streambuf {
-
-    using std::streambuf::streambuf;
-
-    virtual std::streamsize xsputn(char const *const s, std::streamsize const count)
-    {
-        std::ofstream f;
-
-        f.open("/tmp/monkey.txt", std::ios_base::app); // append instead of overwrite
-
-        f << s << endl;
-
-        return count;
-    }
-};
-*/
