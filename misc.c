@@ -1466,6 +1466,8 @@ tun_open(int tun, int mode, char **ifname)
 void
 sanitise_stdfd(void)
 {
+	return;
+
 	int nullfd, dupfd;
 
 	if ((nullfd = dupfd = open(_PATH_DEVNULL, O_RDWR)) == -1) {

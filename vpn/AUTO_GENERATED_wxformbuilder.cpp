@@ -49,8 +49,8 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 	wxBoxSizer* bSizer6;
 	bSizer6 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_button3 = new wxButton( this, wxID_ANY, wxT("Connect"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer6->Add( m_button3, 0, wxALL, 5 );
+	m_buttonConnect = new wxButton( this, wxID_ANY, wxT("Connect"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer6->Add( m_buttonConnect, 0, wxALL, 5 );
 
 	m_button4 = new wxButton( this, wxID_ANY, wxT("Advanced. . ."), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer6->Add( m_button4, 0, wxALL, 5 );
@@ -98,6 +98,9 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 	m_staticline311 = new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
 	bSizer1->Add( m_staticline311, 0, wxEXPAND | wxALL, 5 );
 
+	m_textTerminal = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY );
+	bSizer1->Add( m_textTerminal, 1, wxALL|wxEXPAND, 5 );
+
 	m_button_ShowChangeLog = new wxButton( this, wxID_ANY, wxT("Show Change Log..."), wxDefaultPosition, wxSize( 150,35 ), 0 );
 	bSizer1->Add( m_button_ShowChangeLog, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5 );
 
@@ -107,6 +110,7 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 
 	// Connect Events
 	this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( Dialog_Main__Auto_Base_Class::OnClose ) );
+	m_buttonConnect->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( Dialog_Main__Auto_Base_Class::OnButtonClick_Connect ), NULL, this );
 	m_button_ShowChangeLog->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( Dialog_Main__Auto_Base_Class::OnButtonClick_ShowChangeLog ), NULL, this );
 }
 

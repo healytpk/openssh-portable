@@ -41,7 +41,7 @@ class Dialog_Main__Auto_Base_Class : public wxDialog
 		wxTextCtrl* m_textCtrl5;
 		wxStaticText* m_staticText311;
 		wxTextCtrl* m_textCtrl41;
-		wxButton* m_button3;
+		wxButton* m_buttonConnect;
 		wxButton* m_button4;
 		wxStaticLine* m_staticline31;
 		wxStaticText* m_staticText312;
@@ -53,16 +53,18 @@ class Dialog_Main__Auto_Base_Class : public wxDialog
 		wxStaticText* m_staticText3111;
 		wxTextCtrl* m_textCtrl411;
 		wxStaticLine* m_staticline311;
+		wxTextCtrl* m_textTerminal;
 		wxButton* m_button_ShowChangeLog;
 
 		// Virtual event handlers, override them in your derived class
 		virtual void OnClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnButtonClick_Connect( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnButtonClick_ShowChangeLog( wxCommandEvent& event ) { event.Skip(); }
 
 
 	public:
 
-		Dialog_Main__Auto_Base_Class( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Connect to SSH Server as VPN"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 617,489 ), long style = wxCAPTION|wxCLOSE_BOX );
+		Dialog_Main__Auto_Base_Class( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Connect to SSH Server as VPN"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 617,624 ), long style = wxCAPTION|wxCLOSE_BOX );
 
 		~Dialog_Main__Auto_Base_Class();
 

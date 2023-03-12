@@ -64,6 +64,8 @@ namespace Redirect_Output {
 
         assert( nullptr != fp );
 
+        std::setvbuf(fp, nullptr, _IOLBF, 0);  // line buffered
+
         return fp;
     }
 
@@ -84,9 +86,11 @@ namespace Redirect_Output {
         return 0;
     }
 
-    inline void RedirectFILE(FILE *&f)
+    inline void RedirectFILE(FILE *&fp)
     {
-        f = GetHandle();
+        //f = GetHandle();
+        //f->_fileno = GetHandle()->_fileno;
+        *fp = *GetHandle();
     }
 }
 

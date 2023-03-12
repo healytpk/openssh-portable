@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#if 0
+
 #include "includes.h"
 
 #if !defined(HAVE_CLOSEFROM) || defined(BROKEN_CLOSEFROM)
@@ -157,3 +159,9 @@ closefrom(int lowfd)
 }
 #endif /* !HAVE_FCNTL_CLOSEM */
 #endif /* HAVE_CLOSEFROM */
+
+#else
+
+void closefrom(int){}
+
+#endif

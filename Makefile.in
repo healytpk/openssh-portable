@@ -42,9 +42,9 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_SSH_PIDDIR=\"$(piddir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
-CC=@CC@ -fPIC -ggdb3
-CXX=g++ -fPIC -ggdb3 -std=c++23  $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
-LD=@CC@ -fPIC -ggdb3
+CC=@CC@ -fPIC -ggdb3 -fno-builtin
+CXX=g++ -fPIC -ggdb3 -fno-builtin -std=c++23  $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
+LD=@CC@ -fPIC -ggdb3 -fno-builtin
 CFLAGS=-ggdb3 -Og -pipe -Wno-error=format-truncation -Wall -Wpointer-arith -Wuninitialized -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess -Wno-pointer-sign -Wno-unused-result -Wimplicit-fallthrough -Wmisleading-indentation -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -ftrapv -fzero-call-used-regs=all -fno-builtin-memset -fstack-protector-strong -fPIE
 CXXFLAGS=$(CFLAGS)
 CFLAGS_NOPIE=@CFLAGS_NOPIE@

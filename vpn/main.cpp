@@ -1,13 +1,14 @@
 #include "main.hpp"
 
-#include <cstdlib>  // EXIT_FAILURE, exit
+#include <cstdlib>  // EXIT_FAILURE, exit, abort
 #include <cstdint>  // uintptr_t, uint64_t
 #include <cstdio>   // puts
 #include <iostream> // cerr, endl
 
 #include <dlfcn.h>  // dlopen
 
-#include "GUI_Dialog_Main.hpp"  // Dialog_Main
+#include "wx_custom_event.hpp"   // EventClass_StringView
+#include "GUI_Dialog_Main.hpp"   // Dialog_Main
 
 using std::cout; using std::cerr; using std::endl;
 
@@ -120,10 +121,17 @@ int main(int argc, char **argv)
 
     //dummy_func_from_dummy_library();
 
-    if ( argc < 2 )
+    try
     {
-        Load_GUI_Libraries();
-        return wxEntry(argc, argv);
+        if ( argc < 2 )
+        {
+            Load_GUI_Libraries();
+            return wxEntry(argc, argv);
+        }
+    }
+    catch(...)
+    {
+        std::abort();
     }
 
     cout << "This is the console program :-)" << endl;
