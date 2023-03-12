@@ -2,6 +2,7 @@
 
 #include <cassert>  // assert
 #include <cstddef>  // size_t
+#include <cctype>   // isprint
 #include <cstring>  // strcmp, strstr
 #include <string>   // string
 #include <vector>   // vector
@@ -55,7 +56,7 @@ void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
 	      Redirect_Output::RedirectAll();
 	      fputs("B: I like my seven axolotls\n", stdout);
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
-	      puts("C: I like my seven axolotls\n");
+	      puts("C: I like my seven axolotls");
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
 	      fprintf(stdout, "D: I like my seven axolotls\n");
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
@@ -76,7 +77,23 @@ void Dialog_Main::OnReceiveText(EventClass_StringView &ecs)
 {
     assert( wxIsMainThread() );
 
-    string const s( ecs.sv );
+    string s( ecs.sv );
+
+    // The following loop removes any char that isn't printable
+
+    for ( std::size_t i = 0u; i < s.size(); ++i )
+    {
+	using std::isprint;
+	using std::isspace;
+
+	char unsigned c = s[i];
+
+	if ( false == (isprint(c) || isspace(c)) )
+	{
+	    s.erase(i,1u);
+	    --i;
+	}
+    }
 
     this->m_textTerminal->AppendText(s.c_str());
 }
