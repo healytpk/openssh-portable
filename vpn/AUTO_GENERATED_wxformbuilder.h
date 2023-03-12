@@ -36,11 +36,11 @@ class Dialog_Main__Auto_Base_Class : public wxDialog
 	protected:
 		wxStaticLine* m_staticline3;
 		wxStaticText* m_staticText31;
-		wxTextCtrl* m_textCtrl4;
+		wxTextCtrl* m_textCtrl_RemoteServer;
 		wxStaticText* m_staticText41;
-		wxTextCtrl* m_textCtrl5;
+		wxTextCtrl* m_textCtrl_Username;
 		wxStaticText* m_staticText311;
-		wxTextCtrl* m_textCtrl41;
+		wxTextCtrl* m_textCtrl_Password;
 		wxButton* m_buttonConnect;
 		wxButton* m_button4;
 		wxStaticLine* m_staticline31;

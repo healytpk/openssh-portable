@@ -28,6 +28,8 @@ Dialog_Main::Dialog_Main( wxWindow* parent )
     /* Nothing to do in here */
 }
 
+extern "C" void Set_Password_From_GUI(char const*);  // defined in readpass.c
+
 void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
 {
     static std::jthread j;
@@ -42,6 +44,16 @@ void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
 	nullptr,
 	nullptr,
     };
+
+    std::string password( this->m_textCtrl_Password->GetValue().mb_str() );
+
+    if ( password.empty() )
+    {
+	wxMessageBox("Password cannot be blank", "Error", wxICON_ERROR|wxCENTRE|wxOK, this);
+	return;
+    }
+
+    Set_Password_From_GUI( password.c_str() );
 
     //wxMessageBox("I wish I was a frog","Monkey Fish",0,0);
 

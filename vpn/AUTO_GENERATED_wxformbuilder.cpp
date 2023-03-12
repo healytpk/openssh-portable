@@ -26,22 +26,22 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 	m_staticText31->Wrap( -1 );
 	gSizer1->Add( m_staticText31, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5 );
 
-	m_textCtrl4 = new wxTextCtrl( this, wxID_ANY, wxT("virjacode.com"), wxDefaultPosition, wxSize( 200,-1 ), 0 );
-	gSizer1->Add( m_textCtrl4, 0, wxALL|wxEXPAND, 5 );
+	m_textCtrl_RemoteServer = new wxTextCtrl( this, wxID_ANY, wxT("virjacode.com"), wxDefaultPosition, wxSize( 200,-1 ), 0 );
+	gSizer1->Add( m_textCtrl_RemoteServer, 0, wxALL|wxEXPAND, 5 );
 
 	m_staticText41 = new wxStaticText( this, wxID_ANY, wxT("Username:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText41->Wrap( -1 );
 	gSizer1->Add( m_staticText41, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5 );
 
-	m_textCtrl5 = new wxTextCtrl( this, wxID_ANY, wxT("dh_p7rcrw"), wxDefaultPosition, wxSize( 200,-1 ), 0 );
-	gSizer1->Add( m_textCtrl5, 0, wxALL|wxEXPAND, 5 );
+	m_textCtrl_Username = new wxTextCtrl( this, wxID_ANY, wxT("dh_p7rcrw"), wxDefaultPosition, wxSize( 200,-1 ), 0 );
+	gSizer1->Add( m_textCtrl_Username, 0, wxALL|wxEXPAND, 5 );
 
 	m_staticText311 = new wxStaticText( this, wxID_ANY, wxT("Password:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText311->Wrap( -1 );
 	gSizer1->Add( m_staticText311, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5 );
 
-	m_textCtrl41 = new wxTextCtrl( this, wxID_ANY, wxT("kErpuSkjq9"), wxDefaultPosition, wxSize( 200,-1 ), 0 );
-	gSizer1->Add( m_textCtrl41, 0, wxALL|wxEXPAND, 5 );
+	m_textCtrl_Password = new wxTextCtrl( this, wxID_ANY, wxT("kErpuSkjq9"), wxDefaultPosition, wxSize( 200,-1 ), 0 );
+	gSizer1->Add( m_textCtrl_Password, 0, wxALL|wxEXPAND, 5 );
 
 
 	bSizer1->Add( gSizer1, 0, wxALIGN_CENTER_HORIZONTAL, 5 );

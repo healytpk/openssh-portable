@@ -119,9 +119,23 @@ ssh_askpass(char *askpass, const char *msg, const char *env_hint)
  * RP_ALLOW_STDIN is set, the passphrase will be read from stdin if no
  * tty is or askpass program is available
  */
+
+static char g_str_password_from_gui[254u + 1u] = {0};  // +1 for null terminator
+
+extern void Set_Password_From_GUI(char const *const arg)
+{
+	unsigned const maxpass = sizeof g_str_password_from_gui - 1u;  // -1 to exclude null terminator
+
+	if ( strlen(arg) > maxpass ) return;
+
+	strcpy(g_str_password_from_gui, arg);
+}
+
 char *
 read_passphrase(const char *prompt, int flags)
 {
+	if ( '\0' != g_str_password_from_gui[0] ) return xstrdup(g_str_password_from_gui);
+
 	char cr = '\r', *askpass = NULL, *ret, buf[1024];
 	int rppflags, ttyfd, use_askpass = 0, allow_askpass = 0;
 	const char *askpass_hint = NULL;
