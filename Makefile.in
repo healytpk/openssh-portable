@@ -120,7 +120,7 @@ SKOBJS=	ssh-sk-client.o
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
 	vpn/vpn-core.cpp.o vpn/vpn-linux-tun.o \
-	vpn/AUTO_GENERATED_wxformbuilder.cpp.o vpn/GUI_Dialog_Main.cpp.o vpn/main.cpp.o vpn/stubs.cpp.o
+	vpn/AUTO_GENERATED_wxformbuilder.cpp.o vpn/GUI_Dialog_Main.cpp.o vpn/main.cpp.o vpn/stubs.cpp.o vpn/ostream_redirect.cpp.o
 
 SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
   vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
