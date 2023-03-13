@@ -21,17 +21,6 @@
             p(arg);
         }
 
-        ssize_t write(int fd, void const *buf, size_t count)
-        {
-            static ssize_t (*const p)(int,void const*,size_t) = reinterpret_cast<ssize_t(*)(int,void const*,size_t)>(  ::dlsym(RTLD_NEXT, "write")  );
-
-            if ( (fd < 1) || (fd > 2) ) return p(fd,buf,count);
-
-            extern ssize_t writer(void *cookie, char const *buffer, size_t size);  // defined in stubs.cpp.unique_rule
-
-            return writer(nullptr, static_cast<char const*>(buf), count);
-        }
-
 #if 1
         static char const *const g_strs_dyn_libs[] = {
             //"libgtk-3.so",
