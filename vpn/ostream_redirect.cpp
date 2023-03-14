@@ -6,6 +6,7 @@
 #include <stdio.h>  // FILE, ssize_t, off64_t, cookie_iofunctions_t, fopencookie
 #include <cstdarg>  // va_list, va_start, va_end
 #include <cstring>  // strlen
+#include <atomic>   // atomic<bool>
 #include <string>   // string
 #include <iostream> // cout, cerr, clog, endl
 #include <streambuf>// streambuf
@@ -23,6 +24,8 @@ namespace {
 
     std::binary_semaphore lock(1);
     std::string str;
+
+    std::atomic<bool> g_should_redirect{false};
 
     ssize_t writer(void*, char const *const buffer, size_t const size)
     {
@@ -60,15 +63,17 @@ namespace {
 
 extern "C" ssize_t write(int const fd, void const *const buf, size_t const count)  // This takes the place of the function provided by glibc
 {
+    if ( g_should_redirect && ((1==fd) || (2==fd)) ) return writer(nullptr, static_cast<char const*>(buf), count);
+
     static ssize_t (*const p)(int,void const*,size_t) = reinterpret_cast<ssize_t(*)(int,void const*,size_t)>(  ::dlsym(RTLD_NEXT, "write")  );
 
-    if ( (fd < 1) || (fd > 2) ) return p(fd,buf,count);  // 1 = stdout, 2 = stderr
-
-    return writer(nullptr, static_cast<char const*>(buf), count);
+    return p(fd,buf,count);  // 1 = stdout, 2 = stderr
 }
 
 void RedirectAllOutput(void)
 {
+    g_should_redirect = true;
+
     cookie_io_functions_t g_funcptrs = {};  // all nullptr
 
     g_funcptrs.write = writer;
