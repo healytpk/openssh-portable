@@ -15,52 +15,44 @@ section .text
 
     print8bytes:    ; This is a function that returns void
        ; Two parameters:
-       ;     r9: The 8-byte string to print
-       ;     r8: If true, prints a trailing new line
+       ;              rdi: If true, prints a trailing new line
+       ;     Top of stack: The 8-byte string to print
+       enter 0, 0
 
        ; save all the register values we're going to use
+       push rdi
        push rax
        push rsi
-       push rdi
        push rdx
 
-       ;zero out the registers we are going to need
-       xor rax, rax
-       xor rsi, rsi
-       xor rdi, rdi
-       xor rdx, rdx
-
        ;write(int fd, char *msg, unsigned int len)
-       mov al, 1
-       add di, 1
-       mov rsi, r9
-       push rsi
-       mov rsi, rsp
-       mov dl, 8     ; Print 8 bytes at a time
+       mov     rax, 1              ; system call 1 is write
+       ;order of registers for a syscall: rdi, rsi, rdx, r10, r8, r9
+       mov     rdi, 1              ; file handle 1 is stdout
+       mov     rsi, rbp            ; Address of string = top of stack
+       add     rsi, 16
+       mov     rdx, 8              ; number of bytes
        syscall
-       add rsp,8     ; Pop item off top of stack and discard
 
-       cmp r8, 1     ; check if r8 is true or false
+       cmp qword [rbp-8], 1        ; check if rdi is true or false
        jl no_new_line
-       ;zero out the registers we are going to need
-       xor rax, rax
-       xor rsi, rsi
-       xor rdi, rdi
-       xor rdx, rdx
+
        ;write(int fd, char *msg, unsigned int len)
-       mov al, 1
-       add di, 1
-       mov rsi, 0x000000000000000a  ; new line
-       push rsi
-       mov rsi, rsp
-       mov dl, 1     ; Print just one byte
+       ; write(1, message, 13)
+       mov     rax, 1              ; system call 1 is write
+       ;order of registers for a syscall: rdi, rsi, rdx, r10, r8, r9
+       mov     rdi, 1              ; file handle 1 is stdout
+       push 0x0a
+       mov     rsi, rsp            ; Address of string = top of stack
+       mov     rdx, 1              ; number of bytes
        syscall
-       add rsp,8     ; Pop item off top of stack and discard
-    no_new_line:     ; just a jump label - not a function name
+       add rsp,8                   ; Pop item off top of stack and discard
+    no_new_line:                   ; just a jump label - not a function name
        pop rdx
-       pop rdi
        pop rsi
        pop rax
+       pop rdi
+       leave
        ret
 
     global pre_start:function
@@ -74,36 +66,47 @@ section .text
 
        call dlopen_libc
 
-       push r9    ; save because we'll use it - pop it back later
-       push r8    ; save because we'll use it - pop it back later
+       push rdi
 
-       mov r8, 0                   ; false = don't put trailing new line
-       mov r9, 0x3d3d3d3d3d3d3d3d  ; "========"
+       mov rdi, 0x3d3d3d3d3d3d3d3d ; false = don't put trailing new line
+       push rdi ; "========"
+       mov rdi, 0                  ; false = don't put trailing new line
        call print8bytes
        call print8bytes
        call print8bytes
+       add rsp,8                   ; Pop item off top of stack and discard
 
-       mov r9, 0x6174735f65727020  ; " pre_sta"
+       mov rdi, 0x6174735f65727020 ; " pre_sta"
+       push rdi
+       mov rdi, 0                  ; false = don't put trailing new line
        call print8bytes
+       add rsp,8                   ; Pop item off top of stack and discard
 
        cmp qword[rbp+8], 2         ; check if argc < 2
        jl gui_only                 ; if argc < 2 then we want GUI mode
-       mov r9, 0x646d63202d207472  ; "rt - cmd"
+       mov rdi, 0x646d63202d207472     ; "rt - cmd"
+       push rdi
+       mov rdi, 0                  ; false = don't put trailing new line
        call print8bytes
        jmp both                    ; skip the next 10-byte instruction
      gui_only:
-       mov r9, 0x495547202d207472  ; "rt - GUI"
+       mov rdi, 0x495547202d207472  ; "rt - GUI"
+       push rdi
+       mov rdi, 0
        call print8bytes
        ;call Load_GUI_Libraries  -  no needed here so moved to main
      both:
-       mov r9, 0x3d3d3d3d3d3d3d3d  ; "========"
+       add rsp,8                   ; Pop item off top of stack and discard
+       mov rdi, 0x3d3d3d3d3d3d3d3d ; "========"
+       push rdi
+       mov rdi, 0
        call print8bytes
        call print8bytes
-       mov r8, 1                   ; true = put trailing new line
+       mov rdi, 1                  ; true = put trailing new line
        call print8bytes
+       add rsp,8                   ; Pop item off top of stack and discard
 
-       pop r8
-       pop r9
+       pop rdi
 
        mov rsp, rbp
        pop rbp
