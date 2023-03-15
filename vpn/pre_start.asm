@@ -9,37 +9,37 @@
 %define count_regs 14
 
 %macro backup_all_registers 0
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rsi
-	push rdi
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
 %endmacro
 
 %macro restore_all_registers 0
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rdi
-	pop rsi
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
 %endmacro
 
 extern _start
@@ -47,32 +47,22 @@ extern load_libs
 
 section .text
 
-	dlopen_libc:
-       call load_libs
-       ret
-
     print8bytes:    ; This is a function that returns void
+       backup_all_registers
        ; Two parameters:
        ;               r8: If true, prints a trailing new line
        ;     Top of stack: The 8-byte string to print
-       enter 0, 0
-
-       ; save all the register values we're going to use
-       push rdi
-       push rax
-       push rsi
-       push rdx
-
        ;write(int fd, char *msg, unsigned int len)
        mov     rax, 1              ; system call 1 is write
        mov     rdi, 1              ; file handle 1 is stdout
-       mov     rsi, rbp            ; Address of string = top of stack + 16
-       add     rsi, 16
+       mov     rsi, rsp
+       add     rsi, 8*(1+count_regs) ; Address of string behind registers and return address
        mov     rdx, 8              ; number of bytes
        syscall
 
-       cmp     r8, 1               ; check if rdi is true or false
-       jl no_new_line
+       cmp     r8, 1               ; check if r8 is true or false
+       jl common_line_ending
+   new_line:
        ;write(int fd, char *msg, unsigned int len)
        mov     rax, 1              ; system call 1 is write
        mov     rdi, 1              ; file handle 1 is stdout
@@ -80,25 +70,19 @@ section .text
        mov     rsi, rsp            ; Address of string = top of stack
        mov     rdx, 1              ; number of bytes
        syscall
-       add rsp,8                   ; Pop item off top of stack and discard
-    no_new_line:                   ; just a jump label - not a function name
-       pop rdx
-       pop rsi
-       pop rax
-       pop rdi
-       leave
+       add     rsp,8               ; Pop item off top of stack and discard
+    common_line_ending:            ; just a jump label - not a function name
+       restore_all_registers
        ret
 
     global pre_start:function
     pre_start:
-		endbr64
-		backup_all_registers
+        endbr64
+        backup_all_registers
 
        ; The 'argc' argument to 'main' is on the top of the stack so
        ; we will use the frame pointer 'rbp' to keep track of it.
        enter 0,0
-
-       call dlopen_libc
 
        mov   r8, 0                  ; false = don't put trailing new line
        ; We can't push a 64-Bit constant onto the stack, so we load
@@ -117,11 +101,12 @@ section .text
 
        cmp qword[rbp+8*(count_regs+1)], 2 ; check if argc < 2
        jl gui_only                 ; if argc < 2 then we want GUI mode
+    console_only:
        mov rdi, 0x646d63202d207472 ; "rt - cmd"
        push rdi
        call print8bytes
-       mov rdi, qword[rbp+8*(count_regs+1)]
-       add rdi, 48
+       mov rdi, qword[rbp+8*(count_regs+1)]  ; get the value of argc
+       add rdi, 48                           ; argc + '0'
        push rdi
        call print8bytes
        add  rsp, 8
@@ -130,7 +115,7 @@ section .text
        mov rdi, 0x495547202d207472  ; "rt - GUI"
        push rdi
        call print8bytes
-       ;call Load_GUI_Libraries  -  no needed here so moved to main
+       call load_libs
      both:
        add rsp,8                   ; Pop item off top of stack and discard
        mov rdi, 0x3d3d3d3d3d3d3d3d ; "========"
