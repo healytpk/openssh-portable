@@ -630,7 +630,7 @@ ssh_conn_info_free(struct ssh_conn_info *cinfo)
  * Main program for the ssh client.
  */
 int
-ssh_client_main(int ac, char **av)
+main_ssh_client(int ac, char **av)
 {
 	bool should_enable_vpn = false;
 

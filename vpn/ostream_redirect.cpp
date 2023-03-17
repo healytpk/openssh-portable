@@ -17,38 +17,13 @@
 //#include <cxxabi.h>
 //#include <ext/stdio_filebuf.h>
 
-#include "GUI_Dialog_Main.hpp"  // g_p_dlgmain
-#include "wx_custom_event.hpp"  // EventClass_StringView
+extern ssize_t writer(void*, char const *const buffer, size_t const size);
 
 namespace {
 
     std::binary_semaphore lock(1);
-    std::string str;
 
     std::atomic<bool> g_should_redirect{false};
-
-    ssize_t writer(void*, char const *const buffer, size_t const size)
-    {
-        if ( (0u == size) || (nullptr == buffer) ) return 0;
-
-        lock.acquire();
-
-        str = std::string(buffer,size);
-
-        // Newer versions of wxWidgets allow the following:
-        //   g_p_dlgmain->CallAfter(&Dialog_Main::CallAfter_Receive_Text, std::string_view(buffer,size) );
-        // but for older versions we must use a custom event type
-
-        EventClass_StringView event(g_event_type_string_view,0);
-
-        event.sv = std::string_view(str);
-
-        assert( nullptr != g_p_dlgmain );
-
-        g_p_dlgmain->GetEventHandler()->AddPendingEvent(event);
-
-        return size;
-    }
 
     class streambuf_redirect : public std::streambuf {
 
@@ -59,6 +34,17 @@ namespace {
             return writer(nullptr,s,count);
         }
     };
+}
+
+ssize_t writer(void*, char const *const buffer, size_t const size)
+{
+    if ( (0u == size) || (nullptr == buffer) ) return 0;
+
+    lock.acquire();
+
+    extern ssize_t wxwidgets_writer(void*, char const *const buffer, size_t const size);
+
+    return wxwidgets_writer(nullptr,buffer,size);
 }
 
 extern "C" ssize_t write(int const fd, void const *const buf, size_t const count)  // This takes the place of the function provided by glibc

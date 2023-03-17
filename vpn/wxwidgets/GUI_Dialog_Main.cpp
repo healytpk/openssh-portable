@@ -10,10 +10,13 @@
 
 #include <wx/app.h>     // wxApp
 #include <wx/msgdlg.h>  // wxMessageBox
+#include "wx_custom_event.hpp"  // EventClass_StringView
 
-#include "ostream_redirect.hpp"  // RedirectAllOutput, ReportGUIFinished
+#include "../ostream_redirect.hpp"  // RedirectAllOutput, ReportGUIFinished
 
-extern "C" int ssh_client_main(int,char**);          // defined in ssh.c
+DEFINE_EVENT_TYPE( g_event_type_string_view )
+
+extern "C" int main_ssh_client(int,char**);          // define in ssh.c
 extern "C" void Set_Password_From_GUI(char const*);  // defined in readpass.c
 
 using std::string;
@@ -76,7 +79,7 @@ void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
 	      std::clog << "G: ERR - I like my seven axolotls\n";
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
-              ssh_client_main(8, argv);
+              main_ssh_client(8, argv);
 	  });
 }
 
@@ -110,4 +113,26 @@ void Dialog_Main::OnReceiveText(EventClass_StringView &ecs)
 void Dialog_Main::OnClose( wxCloseEvent& event )
 {
     this->Destroy();
+}
+
+static std::string str;
+
+ssize_t wxwidgets_writer(void*, char const *const buffer, size_t const size)
+{
+#warning Move binary_semaphore to this file and this function
+    str = std::string(buffer,size);
+
+    // Newer versions of wxWidgets allow the following:
+    //   g_p_dlgmain->CallAfter(&Dialog_Main::CallAfter_Receive_Text, std::string_view(buffer,size) );
+    // but for older versions we must use a custom event type
+
+    EventClass_StringView event(g_event_type_string_view,0);
+
+    event.sv = std::string_view(str);
+
+    assert( nullptr != g_p_dlgmain );
+
+    g_p_dlgmain->GetEventHandler()->AddPendingEvent(event);
+
+    return size;
 }

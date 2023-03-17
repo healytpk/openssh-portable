@@ -42,9 +42,9 @@ PATHS= -DSSHDIR=\"$(sysconfdir)\" \
 	-D_PATH_SSH_PIDDIR=\"$(piddir)\" \
 	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
-CC=@CC@ -fPIC -ggdb3 -fno-builtin
-CXX=g++ -fPIC -ggdb3 -fno-builtin -std=c++23  $(shell wx-config --cxxflags | sed 's/\-I\//-isystem\//g') -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
-LD=@CC@ -fPIC -ggdb3 -fno-builtin
+CC=@CC@ -fPIC -ggdb3
+CXX=g++ -fPIC -ggdb3 -std=c++23 -DVPN_DYNAMICALLY_LOAD_GUI_LIBS
+LD=@CC@ -fPIC -ggdb3
 CFLAGS=-ggdb3 -Og -pipe -Wno-error=format-truncation -Wall -Wpointer-arith -Wuninitialized -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess -Wno-pointer-sign -Wno-unused-result -Wimplicit-fallthrough -Wmisleading-indentation -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -ftrapv -fzero-call-used-regs=all -fno-builtin-memset -fstack-protector-strong -fPIE
 CXXFLAGS=$(CFLAGS)
 CFLAGS_NOPIE=@CFLAGS_NOPIE@
@@ -120,7 +120,8 @@ SKOBJS=	ssh-sk-client.o
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect2.o mux.o $(SKOBJS) \
 	vpn/vpn-core.cpp.o vpn/vpn-linux-tun.o \
-	vpn/AUTO_GENERATED_wxformbuilder.cpp.o vpn/GUI_Dialog_Main.cpp.o vpn/main.cpp.o vpn/stubs.cpp.o vpn/ostream_redirect.cpp.o
+	vpn/main.cpp.o vpn/stubs.cpp.o vpn/ostream_redirect.cpp.o \
+	vpn/wxwidgets/AUTO_GENERATED_wxformbuilder.cpp.o vpn/wxwidgets/GUI_Dialog_Main.cpp.o vpn/wxwidgets/main_wxwidgets.cpp.o
 
 SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
   vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
@@ -225,6 +226,15 @@ $(SSHDOBJS): Makefile.in config.h
 vpn/%.cpp.o: vpn/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
+#wxwidgets_cxxflags=$(shell /usr/local/lib/wx/config/x11univ-ansi-debug-static-2.8 --cxxflags | sed 's/\-I\//-isystem\//g')
+#wxwidgets_ldflags_libs=$(shell /usr/local/lib/wx/config/x11univ-ansi-debug-static-2.8 --universal=no --libs std | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ')
+wxwidgets_cxxflags=$(shell /usr/local/lib/wx/config/gtk3-unicode-static-3.2 --cxxflags | sed 's/\-I\//-isystem\//g')
+wxwidgets_ldflags_libs=$(shell /usr/local/lib/wx/config/gtk3-unicode-static-3.2 --libs all | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ')
+
+# for simplicity assume all source depends on all headers
+vpn/wxwidgets/%.cpp.o: vpn/wxwidgets/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp vpn/wxwidgets/*.h vpn/wxwidgets/*.hpp)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(wxwidgets_cxxflags)
+
 # for simplicity assume all source depends on all headers
 stampfile_badvpn: $(SOURCE_FILES_BADVPN) $(wildcard vpn/from_badvpn_tun2socks/*.h vpn/from_badvpn_tun2socks/*.hpp)
 	rm -rf ./vpn/from_badvpn_tun2socks/*.o
@@ -274,7 +284,7 @@ ssh$(EXEEXT): $(LIBCOMPAT) libssh.a $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start
 	       -e pre_start vpn/pre_start.aso  \
 	       $(SSHOBJS) $(OBJ_FILES_BADVPN)  \
 	       $(LDFLAGS_FOR_SSH) \
-	       $(shell wx-config --universal=no --libs std | tr ' ' '\n' | grep "\.a$$" | tr '\n' ' ') \
+	       $(wxwidgets_ldflags_libs) \
 	       -static-libstdc++ -static-libgcc \
 	       -Wl,-Bstatic -lssh -lopenbsd-compat $(LIBS) $(GSSLIBS) $(CHANNELLIBS) -dl \
 	       -Wl,-Bdynamic,--as-needed # must have this at the end
