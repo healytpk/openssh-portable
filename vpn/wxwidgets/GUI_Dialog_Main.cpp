@@ -79,7 +79,7 @@ void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
 	      std::clog << "G: ERR - I like my seven axolotls\n";
 	      std::this_thread::sleep_for( std::chrono::milliseconds(250u) );
-              main_ssh_client(8, argv);
+	      ssh_client_begin(8, argv);
 	  });
 }
 

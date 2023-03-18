@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <cassert>  // assert
+#include <cstdlib>  // EXIT_FAILURE
 #include <iostream> // cerr, endl
 #include <dlfcn.h>  // dlopen
 
@@ -15,9 +16,9 @@ struct ProgramModality {
 
 } g_program_modality = { ProgramModality::ProgramType::undefined, nullptr };
 
-extern     int main_gtk3      (int,char**);
-extern     int main_x11       (int,char**);
-extern "C" int main_ssh_client(int,char**);
+extern     int wxGTK3_begin    (int,char**);
+extern     int wxX11_begin     (int,char**);
+extern "C" int ssh_client_begin(int,char**);
 
 #if 1
         static char const *const g_strs_dyn_libs[] = {
@@ -127,6 +128,13 @@ bool Load_GUI_Libraries_GTK3(void)
 {
     using std::cerr; using std::endl;
 
+    if ( nullptr == dlopen("libgtk-3.so", RTLD_LAZY | RTLD_GLOBAL) )
+    {
+        cerr << "ERROR loading library: " << *pp << endl;
+        return false;
+    }
+
+/*
     cerr << "======= Libraries loaded with dlopen: ";
 
     for ( char const *const *pp = g_strs_dyn_libs; nullptr != *pp; ++pp )
@@ -141,13 +149,39 @@ bool Load_GUI_Libraries_GTK3(void)
     }
 
     cerr << endl;
+*/
 
     return true;
 }
 
 bool Load_GUI_Libraries_X11(void)
 {
-    return false;
+    using std::cerr; using std::endl;
+
+    if ( nullptr == dlopen("libX11.so", RTLD_LAZY | RTLD_GLOBAL) )
+    {
+        cerr << "ERROR loading library: " << *pp << endl;
+        return false;
+    }
+
+/*
+    cerr << "======= Libraries loaded with dlopen: ";
+
+    for ( char const *const *pp = g_strs_dyn_libs; nullptr != *pp; ++pp )
+    {
+        if ( nullptr == dlopen(*pp, RTLD_LAZY | RTLD_GLOBAL) )
+        {
+            cerr << "ERROR loading library: " << *pp << endl;
+            return false;
+        }
+
+        cerr << *pp << " " << std::flush;
+    }
+
+    cerr << endl;
+*/
+
+    return true;
 }
 
 int main(int argc, char **argv)
@@ -171,15 +205,15 @@ int main(int argc, char **argv)
     {
         if ( (argc < 2) && Load_GUI_Libraries_GTK3() )
         {
-            g_program_modality = ProgramModality{ ProgramModality::ProgramType::gtk3,    main_gtk3       };
+            g_program_modality = ProgramModality{ ProgramModality::ProgramType::gtk3,    wxGTK3_begin     };
         }
         else if ( (argc < 2) && Load_GUI_Libraries_X11() )
         {
-            g_program_modality = ProgramModality{ ProgramModality::ProgramType::x11,     main_x11        };
+            g_program_modality = ProgramModality{ ProgramModality::ProgramType::x11,     wxX11_begin      };
         }
         else
         {
-            g_program_modality = ProgramModality{ ProgramModality::ProgramType::console, main_ssh_client };
+            g_program_modality = ProgramModality{ ProgramModality::ProgramType::console, ssh_client_begin };
         }
 
         assert( nullptr != g_program_modality.funcptr_main );

@@ -63,22 +63,14 @@ bool App_gui_openssh_vpn::OnInit(void)
 
 //char *__progname = "ssh";
 
-extern "C" void dummy_func_from_dummy_library(void);
-
 extern "C" void load_libs(void)  // gets called from pre_start (before _start)
 {
     //::dlopen("lib9.so7",RTLD_LAZY|RTLD_GLOBAL);
 }
 
-int main_gtk3(int argc, char **argv)
+int begin(int argc, char **argv)  // This becomes wxX11_begin or wxGTK3_begin
 {
     return wxEntry(argc,argv);
-}
-
-int main_x11(int const argc, char **const argv)
-{
-    cerr << "=== main_x11 is empty ===" << endl;
-    return 0;
 }
 
 #ifdef __WXX11__

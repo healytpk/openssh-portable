@@ -129,31 +129,6 @@ SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	vpn/main.cpp.o vpn/stubs.cpp.o vpn/ostream_redirect.cpp.o \
 	$(OBJ_FILES_WXWIDGETS_X11) $(OBJ_FILES_WXWIDGETS_GTK3)
 
-wxwidgets_cxxflags_x11=$(shell /usr/local/lib/wx/config/x11univ-ansi-debug-static-2.8 --cxxflags | sed 's/\-I\//-isystem\//g')
-wxwidgets_cxxflags_gtk3=$(shell /usr/local/lib/wx/config/gtk3-unicode-static-3.2 --cxxflags | sed 's/\-I\//-isystem\//g')
-
-# for simplicity assume all source depends on all headers
-vpn/wxwidgets/%.cpp.x11.o.pre: vpn/wxwidgets/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp vpn/wxwidgets/*.h vpn/wxwidgets/*.hpp)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(wxwidgets_cxxflags_x11)
-	cat vpn/wxwidgets/x11/exported_symbols.txt | while read symbol; do objcopy --redefine-sym $${symbol}=wxX11_$${symbol} $@; done
-
-# for simplicity assume all source depends on all headers
-vpn/wxwidgets/%.cpp.gtk3.o.pre: vpn/wxwidgets/%.cpp $(wildcard *.h *.hpp vpn/*.h vpn/*.hpp vpn/wxwidgets/*.h vpn/wxwidgets/*.hpp)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(wxwidgets_cxxflags_gtk3)
-	cat vpn/wxwidgets/gtk3/exported_symbols.txt | while read symbol; do objcopy --redefine-sym $${symbol}=wxGTK3_$${symbol} $@; done
-
-stampfile_wxwidgets_x11: $(PRE_OBJ_FILES_WXWIDGETS_X11)
-	rm -rf ./vpn/wxwidgets/*.cpp.x11.o
-	nm --defined-only $^ | cut -d ' ' -f 3 | grep -v "^wxX11_" > $@.exported_symbols.txt
-	cat $@.exported_symbols.txt | while read symbol; do echo $(OBJ_FILES_WXWIDGETS_X11) | tr ' ' '\n' | xargs -i -r -n1 objcopy --redefine-sym $${symbol}=wxX11_$${symbol} {}.pre {}; done
-	echo > $@
-
-stampfile_wxwidgets_gtk3: $(PRE_OBJ_FILES_WXWIDGETS_GTK3)
-	rm -rf ./vpn/wxwidgets/*.cpp.gtk3.o
-	nm --defined-only $^ | cut -d ' ' -f 3 | grep -v "^wxGTK3_" > $@.exported_symbols.txt
-	cat $@.exported_symbols.txt | while read symbol; do echo $(OBJ_FILES_WXWIDGETS_GTK3) | tr ' ' '\n' | xargs -i -r -n1 objcopy --redefine-sym $${symbol}=wxGTK3_$${symbol} {}.pre {}; done
-	echo > $@
-
 SOURCE_FILES_BADVPN = vpn/from_badvpn_tun2socks/BConnection_common.c vpn/from_badvpn_tun2socks/init.c \
   vpn/from_badvpn_tun2socks/PacketProtoEncoder.c vpn/from_badvpn_tun2socks/BConnection_unix.c \
   vpn/from_badvpn_tun2socks/BDatagram_unix.c vpn/from_badvpn_tun2socks/BLog.c vpn/from_badvpn_tun2socks/BLog_syslog.c \
@@ -296,6 +271,31 @@ vpn/pre_start.aso: vpn/pre_start.asm
 
 vpn/stubs.cpp.o: vpn/stubs.cpp.unique_rule
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -x c++ -c $< -o $@ $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gdk-3.0)
+
+wxwidgets_cxxflags_x11=$(shell /usr/local/lib/wx/config/x11univ-ansi-debug-static-2.8 --cxxflags | sed 's/\-I\//-isystem\//g')
+wxwidgets_cxxflags_gtk3=$(shell /usr/local/lib/wx/config/gtk3-unicode-static-3.2 --cxxflags | sed 's/\-I\//-isystem\//g')
+
+# for simplicity assume all source depends on all headers
+vpn/wxwidgets/%.cpp.x11.o.pre: vpn/wxwidgets/%.cpp $(wildcard vpn/*.h vpn/*.hpp vpn/wxwidgets/*.h vpn/wxwidgets/*.hpp)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(wxwidgets_cxxflags_x11)
+	cat vpn/wxwidgets/x11/exported_symbols.txt | while read symbol; do objcopy --redefine-sym $${symbol}=wxX11_$${symbol} $@; done
+
+# for simplicity assume all source depends on all headers
+vpn/wxwidgets/%.cpp.gtk3.o.pre: vpn/wxwidgets/%.cpp $(wildcard vpn/*.h vpn/*.hpp vpn/wxwidgets/*.h vpn/wxwidgets/*.hpp)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ $(wxwidgets_cxxflags_gtk3)
+	cat vpn/wxwidgets/gtk3/exported_symbols.txt | while read symbol; do objcopy --redefine-sym $${symbol}=wxGTK3_$${symbol} $@; done
+
+stampfile_wxwidgets_x11: $(PRE_OBJ_FILES_WXWIDGETS_X11)
+	rm -rf ./vpn/wxwidgets/*.cpp.x11.o
+	nm --defined-only $^ | cut -d ' ' -f 3 | grep -v "^wxX11_" > $@.exported_symbols.txt
+	cat $@.exported_symbols.txt | while read symbol; do echo $(OBJ_FILES_WXWIDGETS_X11) | tr ' ' '\n' | xargs -i -r -n1 objcopy --redefine-sym $${symbol}=wxX11_$${symbol} {}.pre {}; done
+	echo > $@
+
+stampfile_wxwidgets_gtk3: $(PRE_OBJ_FILES_WXWIDGETS_GTK3)
+	rm -rf ./vpn/wxwidgets/*.cpp.gtk3.o
+	nm --defined-only $^ | cut -d ' ' -f 3 | grep -v "^wxGTK3_" > $@.exported_symbols.txt
+	cat $@.exported_symbols.txt | while read symbol; do echo $(OBJ_FILES_WXWIDGETS_GTK3) | tr ' ' '\n' | xargs -i -r -n1 objcopy --redefine-sym $${symbol}=wxGTK3_$${symbol} {}.pre {}; done
+	echo > $@
 
 ssh$(EXEEXT): $(LIBCOMPAT) libssh.a stampfile_wxwidgets_x11 stampfile_wxwidgets_gtk3 $(SSHOBJS) $(OBJ_FILES_BADVPN) vpn/pre_start.aso
 	# First  line links normally so that the ELF file has a NEEDED for gtk, pango, cairo, and a few others
