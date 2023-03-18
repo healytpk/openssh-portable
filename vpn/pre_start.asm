@@ -115,7 +115,7 @@ section .text
        mov rdi, 0x495547202d207472  ; "rt - GUI"
        push rdi
        call print8bytes
-       call load_libs
+       ;call load_libs
      both:
        add rsp,8                   ; Pop item off top of stack and discard
        mov rdi, 0x3d3d3d3d3d3d3d3d ; "========"
