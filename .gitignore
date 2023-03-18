@@ -34,3 +34,7 @@ sshd
 !regress/misc/fuzz-harness/Makefile
 !regress/unittests/sshsig/Makefile
 tags
+stampfile_*
+*.o.pre
+*.aso
+
