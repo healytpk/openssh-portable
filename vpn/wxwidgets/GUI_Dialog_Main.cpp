@@ -16,7 +16,7 @@
 
 DEFINE_EVENT_TYPE( g_event_type_string_view )
 
-extern "C" int main_ssh_client(int,char**);          // define in ssh.c
+extern "C" int ssh_client_begin(int,char**);         // define in ssh.c
 extern "C" void Set_Password_From_GUI(char const*);  // defined in readpass.c
 
 using std::string;
