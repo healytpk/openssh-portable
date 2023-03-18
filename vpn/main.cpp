@@ -16,8 +16,8 @@ struct ProgramModality {
 
 } g_program_modality = { ProgramModality::ProgramType::undefined, nullptr };
 
-extern     int wxGTK3_begin    (int,char**);
-extern     int wxX11_begin     (int,char**);
+extern "C" int wxGTK3_begin    (int,char**);
+extern "C" int wxX11_begin     (int,char**);
 extern "C" int ssh_client_begin(int,char**);
 
 #if 1
@@ -130,7 +130,7 @@ bool Load_GUI_Libraries_GTK3(void)
 
     if ( nullptr == dlopen("libgtk-3.so", RTLD_LAZY | RTLD_GLOBAL) )
     {
-        cerr << "ERROR loading library: " << *pp << endl;
+        cerr << "ERROR loading library: libgtk-3.so" << endl;
         return false;
     }
 
@@ -160,7 +160,7 @@ bool Load_GUI_Libraries_X11(void)
 
     if ( nullptr == dlopen("libX11.so", RTLD_LAZY | RTLD_GLOBAL) )
     {
-        cerr << "ERROR loading library: " << *pp << endl;
+        cerr << "ERROR loading library: libX11.so" << endl;
         return false;
     }
 
