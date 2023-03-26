@@ -70,6 +70,9 @@ class Dialog_Main__Auto_Base_Class : public wxDialog
 		wxCheckBox* mRoute_checkBox_04;
 		wxTextCtrl* mRoute_Text_Net_04;
 		wxTextCtrl* mRoute_Text_Netmask_04;
+		wxCheckBox* mRoute_checkBox_05;
+		wxTextCtrl* mRoute_Text_Net_05;
+		wxTextCtrl* mRoute_Text_Netmask_05;
 		wxTextCtrl* m_textTerminal;
 		wxButton* m_button_ShowChangeLog;
 

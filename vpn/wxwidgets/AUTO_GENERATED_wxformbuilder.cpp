@@ -103,7 +103,7 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 	bSizer1->Add( m_staticText8, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5 );
 
 	wxGridSizer* gSizer3;
-	gSizer3 = new wxGridSizer( 5, 3, 0, 0 );
+	gSizer3 = new wxGridSizer( 3, 6, 0, 0 );
 
 	mRoute_checkBox_00 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
 	gSizer3->Add( mRoute_checkBox_00, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
@@ -145,13 +145,24 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 	gSizer3->Add( mRoute_Text_Netmask_03, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
 	mRoute_checkBox_04 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	mRoute_checkBox_04->SetValue(true);
 	gSizer3->Add( mRoute_checkBox_04, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
 
-	mRoute_Text_Net_04 = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	mRoute_Text_Net_04 = new wxTextCtrl( this, wxID_ANY, wxT("172.32.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
 	gSizer3->Add( mRoute_Text_Net_04, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
-	mRoute_Text_Netmask_04 = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	mRoute_Text_Netmask_04 = new wxTextCtrl( this, wxID_ANY, wxT("255.255.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
 	gSizer3->Add( mRoute_Text_Netmask_04, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_checkBox_05 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	mRoute_checkBox_05->SetValue(true);
+	gSizer3->Add( mRoute_checkBox_05, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Net_05 = new wxTextCtrl( this, wxID_ANY, wxT("172.32.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Net_05, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Netmask_05 = new wxTextCtrl( this, wxID_ANY, wxT("255.255.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Netmask_05, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
 
 	bSizer1->Add( gSizer3, 0, wxALIGN_CENTER_HORIZONTAL, 5 );
