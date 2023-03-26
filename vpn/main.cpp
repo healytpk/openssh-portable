@@ -1,24 +1,19 @@
+#include "main.hpp"
+
 #define _GNU_SOURCE
 #include <cassert>  // assert
 #include <cstdlib>  // EXIT_FAILURE
 #include <iostream> // cerr, endl
 #include <dlfcn.h>  // dlopen
 
-struct ProgramModality {
-    enum class ProgramType : unsigned {
-        undefined=0,
-        console=1,
-        gtk3,
-        x11
-    } mode;
-
-    int (*funcptr_main)(int,char**);
-
-} g_program_modality = { ProgramModality::ProgramType::undefined, nullptr };
+struct ProgramModality g_program_modality = { ProgramModality::ProgramType::undefined, nullptr, nullptr };
 
 extern "C" int wxGTK3_begin    (int,char**);
 extern "C" int wxX11_begin     (int,char**);
 extern "C" int ssh_client_begin(int,char**);
+
+extern "C" ssize_t wxGTK3_wxwidgets_writer(void*,char const*,size_t);
+extern "C" ssize_t wxX11_wxwidgets_writer (void*,char const*,size_t);
 
 #if 1
         static char const *const g_strs_dyn_libs[] = {
@@ -205,15 +200,15 @@ int main(int argc, char **argv)
     {
         if ( (argc < 2) && Load_GUI_Libraries_GTK3() )
         {
-            g_program_modality = ProgramModality{ ProgramModality::ProgramType::gtk3,    wxGTK3_begin     };
+            g_program_modality = ProgramModality{ ProgramModality::ProgramType::gtk3,    wxGTK3_begin    , wxGTK3_wxwidgets_writer };
         }
         else if ( (argc < 2) && Load_GUI_Libraries_X11() )
         {
-            g_program_modality = ProgramModality{ ProgramModality::ProgramType::x11,     wxX11_begin      };
+            g_program_modality = ProgramModality{ ProgramModality::ProgramType::x11,     wxX11_begin     , wxX11_wxwidgets_writer };
         }
         else
         {
-            g_program_modality = ProgramModality{ ProgramModality::ProgramType::console, ssh_client_begin };
+            g_program_modality = ProgramModality{ ProgramModality::ProgramType::console, ssh_client_begin, nullptr };
         }
 
         assert( nullptr != g_program_modality.funcptr_main );

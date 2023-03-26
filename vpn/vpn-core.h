@@ -3,6 +3,12 @@
 
 #ifdef __cplusplus
 
+#   include <cstdint>  // uint32_t
+#   include <vector>   // vector
+#   include <utility>  // pair
+
+    extern "C" std::vector< std::pair<std::uint32_t,std::uint32_t> > g_VPN_excluded_routes;
+
     namespace VPN {
         extern void VPN_Enable(void);
         extern bool ParseNetworks(int,int);

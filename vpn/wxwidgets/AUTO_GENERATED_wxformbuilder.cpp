@@ -98,6 +98,64 @@ Dialog_Main__Auto_Base_Class::Dialog_Main__Auto_Base_Class( wxWindow* parent, wx
 	m_staticline311 = new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
 	bSizer1->Add( m_staticline311, 0, wxEXPAND | wxALL, 5 );
 
+	m_staticText8 = new wxStaticText( this, wxID_ANY, wxT("Routes excluded from VPN:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText8->Wrap( -1 );
+	bSizer1->Add( m_staticText8, 0, wxALL|wxALIGN_CENTER_HORIZONTAL, 5 );
+
+	wxGridSizer* gSizer3;
+	gSizer3 = new wxGridSizer( 5, 3, 0, 0 );
+
+	mRoute_checkBox_00 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	gSizer3->Add( mRoute_checkBox_00, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Net_00 = new wxTextCtrl( this, wxID_ANY, wxT("10.0.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Net_00, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Netmask_00 = new wxTextCtrl( this, wxID_ANY, wxT("255.0.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Netmask_00, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_checkBox_01 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	mRoute_checkBox_01->SetValue(true);
+	gSizer3->Add( mRoute_checkBox_01, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Net_01 = new wxTextCtrl( this, wxID_ANY, wxT("169.254.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Net_01, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Netmask_01 = new wxTextCtrl( this, wxID_ANY, wxT("255.255.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Netmask_01, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_checkBox_02 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	mRoute_checkBox_02->SetValue(true);
+	gSizer3->Add( mRoute_checkBox_02, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Net_02 = new wxTextCtrl( this, wxID_ANY, wxT("172.16.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Net_02, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Netmask_02 = new wxTextCtrl( this, wxID_ANY, wxT("255.240.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Netmask_02, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_checkBox_03 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	mRoute_checkBox_03->SetValue(true);
+	gSizer3->Add( mRoute_checkBox_03, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Net_03 = new wxTextCtrl( this, wxID_ANY, wxT("192.168.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Net_03, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Netmask_03 = new wxTextCtrl( this, wxID_ANY, wxT("255.255.0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Netmask_03, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_checkBox_04 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( 20,-1 ), 0 );
+	gSizer3->Add( mRoute_checkBox_04, 0, wxALL|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Net_04 = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Net_04, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+	mRoute_Text_Netmask_04 = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	gSizer3->Add( mRoute_Text_Netmask_04, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
+
+
+	bSizer1->Add( gSizer3, 0, wxALIGN_CENTER_HORIZONTAL, 5 );
+
 	m_textTerminal = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY );
 	bSizer1->Add( m_textTerminal, 1, wxALL|wxEXPAND, 5 );
 

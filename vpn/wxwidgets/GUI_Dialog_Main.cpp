@@ -13,6 +13,7 @@
 #include "wx_custom_event.hpp"  // EventClass_StringView
 
 #include "../ostream_redirect.hpp"  // RedirectAllOutput, ReportGUIFinished
+#include "../vpn-core.h"            // g_VPN_excluded_routes
 
 DEFINE_EVENT_TYPE( g_event_type_string_view )
 
@@ -28,6 +29,10 @@ Dialog_Main::Dialog_Main( wxWindow* parent )
 {
     this->Connect( g_event_type_string_view, EventHandler_StringView(Dialog_Main::OnReceiveText) );
 }
+
+// I've made sure the function on the next line returns uint32_t and not
+// unsigned long. The value returned is in NetworkByte order (i.e. BigEndian)
+extern "C" std::uint32_t inet_addr(char const*);
 
 void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
 {
@@ -59,6 +64,18 @@ void Dialog_Main::OnButtonClick_Connect(wxCommandEvent&)
     }
 
     Set_Password_From_GUI( password.c_str() );
+
+    g_VPN_excluded_routes.clear();
+
+    for ( unsigned i = 0u; i < (sizeof(this->mRoute_checkBox) / sizeof*(this->mRoute_checkBox)); ++i )
+    {
+	if ( false == this->mRoute_checkBox[i]->GetValue() ) continue;
+
+	uint32_t const addr = ::inet_addr(this->mRoute_Text_Net    [i]->GetValue().ToAscii()),
+	               mask = ::inet_addr(this->mRoute_Text_Netmask[i]->GetValue().ToAscii());
+
+	g_VPN_excluded_routes.emplace_back(addr,mask);
+    }
 
     RedirectAllOutput();
 
@@ -117,7 +134,7 @@ void Dialog_Main::OnClose( wxCloseEvent& event )
 
 static std::string str;
 
-ssize_t wxwidgets_writer(void*, char const *const buffer, size_t const size)
+extern "C" ssize_t wxwidgets_writer(void*, char const *const buffer, size_t const size)
 {
 #warning Move binary_semaphore to this file and this function
     str = std::string(buffer,size);

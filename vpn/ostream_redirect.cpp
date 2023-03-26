@@ -17,6 +17,8 @@
 //#include <cxxabi.h>
 //#include <ext/stdio_filebuf.h>
 
+#include "main.hpp"  // g_program_modality
+
 extern ssize_t writer(void*, char const *const buffer, size_t const size);
 
 namespace {
@@ -42,9 +44,9 @@ ssize_t writer(void*, char const *const buffer, size_t const size)
 
     lock.acquire();
 
-    extern ssize_t wxwidgets_writer(void*, char const *const buffer, size_t const size);
+    assert( nullptr != g_program_modality.funcptr_wxwidgets_writer );
 
-    return wxwidgets_writer(nullptr,buffer,size);
+    return g_program_modality.funcptr_wxwidgets_writer(nullptr,buffer,size);
 }
 
 extern "C" ssize_t write(int const fd, void const *const buf, size_t const count)  // This takes the place of the function provided by glibc

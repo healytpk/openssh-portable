@@ -22,6 +22,7 @@
 #include <wx/bitmap.h>
 #include <wx/image.h>
 #include <wx/icon.h>
+#include <wx/checkbox.h>
 #include <wx/dialog.h>
 
 ///////////////////////////////////////////////////////////////////////////
@@ -53,6 +54,22 @@ class Dialog_Main__Auto_Base_Class : public wxDialog
 		wxStaticText* m_staticText3111;
 		wxTextCtrl* m_textCtrl411;
 		wxStaticLine* m_staticline311;
+		wxStaticText* m_staticText8;
+		wxCheckBox* mRoute_checkBox_00;
+		wxTextCtrl* mRoute_Text_Net_00;
+		wxTextCtrl* mRoute_Text_Netmask_00;
+		wxCheckBox* mRoute_checkBox_01;
+		wxTextCtrl* mRoute_Text_Net_01;
+		wxTextCtrl* mRoute_Text_Netmask_01;
+		wxCheckBox* mRoute_checkBox_02;
+		wxTextCtrl* mRoute_Text_Net_02;
+		wxTextCtrl* mRoute_Text_Netmask_02;
+		wxCheckBox* mRoute_checkBox_03;
+		wxTextCtrl* mRoute_Text_Net_03;
+		wxTextCtrl* mRoute_Text_Netmask_03;
+		wxCheckBox* mRoute_checkBox_04;
+		wxTextCtrl* mRoute_Text_Net_04;
+		wxTextCtrl* mRoute_Text_Netmask_04;
 		wxTextCtrl* m_textTerminal;
 		wxButton* m_button_ShowChangeLog;
 
@@ -64,7 +81,7 @@ class Dialog_Main__Auto_Base_Class : public wxDialog
 
 	public:
 
-		Dialog_Main__Auto_Base_Class( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Connect to SSH Server as VPN"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 617,624 ), long style = wxCAPTION|wxCLOSE_BOX );
+		Dialog_Main__Auto_Base_Class( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Connect to SSH Server as VPN"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 678,801 ), long style = wxCAPTION|wxCLOSE_BOX );
 
 		~Dialog_Main__Auto_Base_Class();
 

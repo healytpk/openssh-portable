@@ -35,6 +35,7 @@ extern "C" void add_route(unsigned long const dest, unsigned long const netmask,
 
 // The next one is defined in channels.c
 extern "C" long unsigned g_ip_address_of_remote_SSH_server = 0u;  // Stored in NetworkByteOrder (i.e. BigEndian) even on LittleEndian machines
+extern "C" int badvpn_main(int,char**);
 
 inline void last_words_exit(char const *const p)
 {
@@ -42,7 +43,8 @@ inline void last_words_exit(char const *const p)
     std::exit(EXIT_FAILURE);
 }
 
-extern "C" int badvpn_main(int,char**);
+/* declaration */ extern "C" std::vector< std::pair<std::uint32_t,std::uint32_t> > g_VPN_excluded_routes;
+/* definition  */            std::vector< std::pair<std::uint32_t,std::uint32_t> > g_VPN_excluded_routes;
 
 namespace VPN {
 
@@ -135,6 +137,11 @@ static void Start(std::stop_token)
     }
 
     cerr << "============================== Lowest Metric: " << lowest_metric << " ==================================" << endl;
+
+    for ( auto &route : g_VPN_excluded_routes )
+    {
+        add_route(route.first,route.second,::inet_addr(rts.gws.cbegin()->str_gw.c_str()),"dummy",lowest_metric - 3u);
+    }
 
     add_route(g_ip_address_of_remote_SSH_server,0xFFFFFFFFu,::inet_addr(rts.gws.cbegin()->str_gw.c_str()),"dummy",lowest_metric - 2u);
     add_route(                      0x00000000u,0x00000000u,::inet_addr("10.10.10.2"                    ),"dummy",lowest_metric - 1u);
